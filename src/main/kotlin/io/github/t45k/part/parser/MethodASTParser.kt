@@ -10,12 +10,15 @@ import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.MethodDeclaration
 import org.eclipse.jdt.core.dom.TypeDeclaration
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.getEclipseDefaultSettings
+import java.nio.file.Files
+import java.nio.file.Path
 
-object MethodASTParser {
-    private val parser: ASTParser = createParser()
+class MethodASTParser(mjavaFilePath: Path) {
+    private val contents: String = String(Files.readAllBytes(mjavaFilePath))
 
-    fun parse(body: String): MethodDeclaration {
-        parser.setSource(body.toCharArray())
+    fun parse(): MethodDeclaration {
+        val parser: ASTParser = createParser()
+        parser.setSource(contents.toCharArray())
 
         val typeDeclaration: TypeDeclaration = parser.createAST(NullProgressMonitor()) as TypeDeclaration
         return typeDeclaration.methods[0]
