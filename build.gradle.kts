@@ -7,9 +7,8 @@ plugins {
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -21,6 +20,9 @@ dependencies {
 
     // Use JDT AST
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.20.0")
+
+    // Use Commandline
+    implementation("com.github.kusumotolab:sdl4j:0.4.0")
 
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
