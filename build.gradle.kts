@@ -21,6 +21,9 @@ dependencies {
     // Use JDT AST
     implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.20.0")
 
+    // Use guava
+    implementation("com.google.guava:guava:28.2-jre")
+
     // Use Commandline
     implementation("com.github.kusumotolab:sdl4j:0.4.0")
 
