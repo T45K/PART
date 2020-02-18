@@ -1,6 +1,7 @@
 package io.github.t45k.part.mining
 
 import com.github.kusumotolab.sdl4j.util.CommandLine
+import com.google.common.annotations.VisibleForTesting
 import java.nio.file.Path
 
 class GitLog(private val projectRoot: Path, private val filePath: Path) {
@@ -13,7 +14,8 @@ class GitLog(private val projectRoot: Path, private val filePath: Path) {
         return parseCommandLineResult(commandLineResult.outputLines)
     }
 
-    private fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
+    @VisibleForTesting
+    fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
         val logDataList: MutableList<LogData> = mutableListOf()
 
         var i = 0
@@ -25,7 +27,11 @@ class GitLog(private val projectRoot: Path, private val filePath: Path) {
             val commitMessages = mutableListOf<String>()
             while (i < rawLog.size) {
                 val line: String = rawLog[i]
-                if (line.matches(Regex("commit [0-9a-z]+"))) {
+                if (line.isEmpty()) {
+                    i++
+                    continue
+                }
+                if (line.isCommitHash()) {
                     break
                 }
                 commitMessages.add(line)
@@ -37,6 +43,8 @@ class GitLog(private val projectRoot: Path, private val filePath: Path) {
 
         return logDataList
     }
+
+    private fun String.isCommitHash(): Boolean = this.matches(Regex("commit [0-9a-z]+"))
 
     data class LogData(val commitHash: String, val commitMessage: String)
 }
