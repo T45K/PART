@@ -4,11 +4,11 @@ import com.github.kusumotolab.sdl4j.util.CommandLine
 import com.google.common.annotations.VisibleForTesting
 import java.nio.file.Path
 
-class GitLog(private val projectRoot: Path, private val filePath: Path) {
+class GitLog(private val projectRootPath: Path, private val filePath: Path) {
     private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow")
 
     fun execute(): List<LogData> {
-        val commandLineResult: CommandLine.CommandLineResult = CommandLine().execute(projectRoot.toFile(), *gitLogCommand, "$filePath")
+        val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, "$filePath")
                 ?: return emptyList()
 
         return parseCommandLineResult(commandLineResult.outputLines)
