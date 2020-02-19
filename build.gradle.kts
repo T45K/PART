@@ -27,6 +27,9 @@ dependencies {
     // Use Commandline
     implementation("com.github.kusumotolab:sdl4j:0.4.0")
 
+    // Use Rx
+    implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
+
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
