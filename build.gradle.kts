@@ -41,6 +41,9 @@ dependencies {
     // Use logger
     implementation("ch.qos.logback:logback-classic:1.1.3")
 
+    // Use args4j
+    implementation("args4j:args4j:2.33")
+
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
