@@ -20,12 +20,15 @@ class FinerGitController {
 
     // TODO `Paths.get` may be deprecated in future. Use `Path.of` instead of `Paths.get` in JDK11.
     fun execute(projectPath: Path, outputPath: Path = Paths.get("$projectPath-fg")) {
+        logger.info("start FinerGit execution on ${projectPath.fileName}")
         val result: CommandLine.CommandLineResult? = CommandLine().forceExecute("git", "fg", "-s", projectPath.toString(), "-d", outputPath.toString())
 
         if (result == null) {
             logger.warn("failed force execution in $projectPath")
         } else if (!result.isSuccess) {
             logger.warn(result.outputLines.joinToString("\n"))
+        } else {
+            logger.info("finish FinerGit execution on ${projectPath.fileName}")
         }
     }
 }
