@@ -58,5 +58,3 @@ class Configuration {
         FINER_GIT, MINING, TRACKING
     }
 }
-
-
