@@ -38,6 +38,9 @@ dependencies {
     // Use Rx
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
 
+    // Use logger
+    implementation("ch.qos.logback:logback-classic:1.1.3")
+
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
