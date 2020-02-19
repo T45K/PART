@@ -1,9 +1,17 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "1.3.61"
 
     // Apply the application plugin to add support for building a CLI application.
     application
+}
+
+val compileKotlin: KotlinCompile by tasks
+
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }
 
 repositories {
@@ -26,6 +34,12 @@ dependencies {
 
     // Use Commandline
     implementation("com.github.kusumotolab:sdl4j:0.4.0")
+
+    // Use Rx
+    implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
+
+    // Use logger
+    implementation("ch.qos.logback:logback-classic:1.1.3")
 
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
