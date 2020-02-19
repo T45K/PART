@@ -5,10 +5,17 @@ import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
 import org.kohsuke.args4j.spi.PathOptionHandler
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.exitProcess
 
+class App {
+    val logger: Logger = LoggerFactory.getLogger(App::class.java)
+}
+
 fun main(args: Array<String>) {
+    val app = App()
     val config = Configuration()
     val parser = CmdLineParser(config)
 
@@ -21,6 +28,7 @@ fun main(args: Array<String>) {
 
     when (config.mode) {
         Configuration.Mode.FINER_GIT -> {
+            app.logger.info("start FinerGit execution")
             val controller = FinerGitController()
             controller.executeAllProject(config.inputDir)
         }
