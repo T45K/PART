@@ -15,7 +15,7 @@ class FinerGitController {
         Files.list(rootPath)
                 .flatMap { Files.list(it) }
                 .parallel()
-                .forEach { execute(it, Paths.get("${it.parent}/fg/${it.fileName}")) }
+                .forEach { execute(it, Paths.get("${rootPath.parent}/fg/${it.parent.fileName}/${it.fileName}")) }
     }
 
     // TODO `Paths.get` may be deprecated in future. Use `Path.of` instead of `Paths.get` in JDK11.
