@@ -20,38 +20,51 @@ repositories {
 }
 
 dependencies {
-    // Align versions of all Kotlin components
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    // Align versions of all Kotlin components 
+    compile(platform("org.jetbrains.kotlin:kotlin-bom"))
 
     // Use the Kotlin JDK 8 standard library.
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Use JDT AST
-    implementation("org.eclipse.jdt:org.eclipse.jdt.core:3.20.0")
+    compile("org.eclipse.jdt:org.eclipse.jdt.core:3.20.0")
 
     // Use guava
-    implementation("com.google.guava:guava:28.2-jre")
+    compile("com.google.guava:guava:28.2-jre")
 
     // Use Commandline
-    implementation("com.github.kusumotolab:sdl4j:0.4.0")
+    compile("com.github.kusumotolab:sdl4j:0.4.0")
 
     // Use Rx
-    implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
+    compile("io.reactivex.rxjava2:rxkotlin:2.4.0")
 
     // Use logger
-    implementation("ch.qos.logback:logback-classic:1.1.3")
+    compile("ch.qos.logback:logback-classic:1.1.3")
 
     // Use args4j
-    implementation("args4j:args4j:2.33")
+    compile("args4j:args4j:2.33")
 
     // Use the Kotlin test library.
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testCompile("org.jetbrains.kotlin:kotlin-test")
 
     // Use the Kotlin JUnit integration.
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testCompile("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
 application {
     // Define the main class for the application.
     mainClassName = "io.github.t45k.part.AppKt"
+}
+
+val jar by tasks.getting(Jar::class) {
+    manifest {
+        attributes["Main-Class"] = "io.github.t45k.part.AppKt"
+    }
+
+    from(
+            configurations.compile.get().map {
+                if (it.isDirectory) it else zipTree(it)
+            }
+    )
+    exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA")
 }
