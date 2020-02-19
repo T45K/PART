@@ -44,6 +44,9 @@ dependencies {
     // Use args4j
     compile("args4j:args4j:2.33")
 
+    // Use sqlite
+    compile("org.xerial:sqlite-jdbc:3.30.1")
+
     // Use the Kotlin test library.
     testCompile("org.jetbrains.kotlin:kotlin-test")
 
