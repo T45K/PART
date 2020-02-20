@@ -15,9 +15,9 @@ class SQL {
     private val contentsInsertionStatement: PreparedStatement = connection.prepareStatement(contentsInsertionQuery)
 
     companion object {
-        const val methodInsertionQuery: String = "insert into method values(?)"
-        const val revisionInsertionQuery: String = "insert into revision(fileName, hash, message) values(?, ?, ?)"
-        const val contentsInsertionQuery: String = "insert into contents values(?, ?)"
+        private const val methodInsertionQuery: String = "insert into method values(?)"
+        private const val revisionInsertionQuery: String = "insert into revision(fileName, hash, message) values(?, ?, ?)"
+        private const val contentsInsertionQuery: String = "insert into contents values(?, ?)"
     }
 
     init {
