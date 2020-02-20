@@ -14,7 +14,6 @@ class FinerGitController {
     fun executeAllProject(rootPath: Path) {
         Files.list(rootPath)
                 .flatMap { Files.list(it) }
-                .parallel()
                 .forEach { execute(it, createFGDir(rootPath, it)) }
     }
 
