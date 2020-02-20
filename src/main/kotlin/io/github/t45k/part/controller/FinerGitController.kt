@@ -14,13 +14,12 @@ class FinerGitController {
     fun executeAllProject(rootPath: Path) {
         Files.list(rootPath)
                 .flatMap { Files.list(it) }
-                .parallel()
                 .forEach { execute(it, createFGDir(rootPath, it)) }
     }
 
     private fun createFGDir(rootPath: Path, projectPath: Path): Path {
         val organizationPath: Path = projectPath.parent.fileName
-        return Paths.get(rootPath.toString(), "fg", organizationPath.toString(), projectPath.fileName.toString())
+        return Paths.get(rootPath.parent.toString(), "fg", organizationPath.toString(), projectPath.fileName.toString())
     }
 
     // TODO `Paths.get` may be deprecated in future. Use `Path.of` instead of `Paths.get` in JDK11.
