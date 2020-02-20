@@ -1,6 +1,8 @@
 package io.github.t45k.part
 
 import io.github.t45k.part.controller.FinerGitController
+import io.github.t45k.part.mining.Miner
+import io.github.t45k.part.sql.SQL
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -33,6 +35,10 @@ fun main(args: Array<String>) {
             controller.executeAllProject(config.inputDir)
         }
         Configuration.Mode.MINING -> {
+            app.logger.info("start mining")
+            val sql = SQL()
+            Miner().miningAllProjects(config.inputDir)
+                    .forEach { sql.insert(it) }
         }
         Configuration.Mode.TRACKING -> {
         }
