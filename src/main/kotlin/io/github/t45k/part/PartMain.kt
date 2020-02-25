@@ -1,7 +1,7 @@
 package io.github.t45k.part
 
 import io.github.t45k.part.controller.FinerGitController
-import io.github.t45k.part.mining.Miner
+import io.github.t45k.part.mining.MethodMiner
 import io.github.t45k.part.sql.SQL
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
@@ -28,17 +28,33 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
+    if (config.inputDir == null && config.project == null) {
+        throw InvalidRuntimeArgumentsException("Subject was not specified")
+    }
+
     when (config.mode) {
         Configuration.Mode.FINER_GIT -> {
             app.logger.info("start FinerGit execution")
             val controller = FinerGitController()
-            controller.executeAllProject(config.inputDir)
+            if (config.inputDir != null) {
+                controller.executeAllProject(config.inputDir!!)
+            } else {
+                controller.execute(config.project!!)
+            }
+            app.logger.info("end FinerGit execution")
         }
+
         Configuration.Mode.MINING -> {
             app.logger.info("start mining")
             val sql = SQL()
-            Miner().miningAllProjects(config.inputDir)
-                    .forEach { sql.insert(it) }
+            val miner = MethodMiner()
+            if (config.inputDir != null) {
+                miner.miningAllProjects(config.inputDir!!)
+                        .forEach { sql.insert(it) }
+            } else {
+                miner.mining(config.project!!).forEach { sql.insert(it) }
+            }
+            app.logger.info("end mining")
         }
         Configuration.Mode.TRACKING -> {
         }
@@ -46,8 +62,12 @@ fun main(args: Array<String>) {
 }
 
 class Configuration {
-    @Option(name = "-i", aliases = ["--input-dir"], usage = "input dir", required = true, handler = PathOptionHandler::class)
-    lateinit var inputDir: Path
+    @Option(name = "-i", aliases = ["--input-dir"], usage = "input dir", handler = PathOptionHandler::class)
+    var inputDir: Path? = null
+
+    @Option(name = "-p", aliases = ["--projects"], usage = "project dir", handler = PathOptionHandler::class)
+    var project: Path? = null
+
     lateinit var mode: Mode
 
     @Option(name = "-m", aliases = ["--mode"], usage = "select mode: FINER_GIT, MINING, or TRACKING", required = true)
@@ -64,3 +84,5 @@ class Configuration {
         FINER_GIT, MINING, TRACKING
     }
 }
+
+class InvalidRuntimeArgumentsException(override val message: String) : RuntimeException()
