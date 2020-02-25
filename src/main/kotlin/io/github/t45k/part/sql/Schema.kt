@@ -5,7 +5,7 @@ class FileNameSchema {
         override fun toString() = "$TABLE_NAME (${Column.FILE_NAME} string primary key)"
         private const val TABLE_NAME = "file_names"
         const val INSERTION_QUERY = "insert into $TABLE_NAME values(?)"
-        const val ALL_SELECTION_QUERY = "select * from method"
+        const val ALL_SELECTION_QUERY = "select * from $TABLE_NAME"
     }
 }
 
