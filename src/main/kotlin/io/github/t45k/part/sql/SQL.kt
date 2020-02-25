@@ -15,14 +15,14 @@ import java.sql.Statement
 class SQL {
     private val connection: Connection = DriverManager.getConnection("jdbc:sqlite:./db.sqlite3")
             ?: throw RuntimeException("Bad db connection")
-    private val fileNameInsertionStatement: PreparedStatement = connection.prepareStatement(FileNameSchema.INSERTION_QUERY)
-    private val allFileNamesSelectionStatement: PreparedStatement = connection.prepareStatement(FileNameSchema.ALL_SELECTION_QUERY)
+    private val fileNameInsertionStatement: PreparedStatement
+    private val allFileNamesSelectionStatement: PreparedStatement
 
-    private val revisionInsertionStatement: PreparedStatement = connection.prepareStatement(RevisionSchema.INSERTION_QUERY)
-    private val revisionSelectionStatement: PreparedStatement = connection.prepareStatement(RevisionSchema.SELECTION_QUERY)
+    private val revisionInsertionStatement: PreparedStatement
+    private val revisionSelectionStatement: PreparedStatement
 
-    private val contentsInsertionStatement: PreparedStatement = connection.prepareStatement(ContentsSchema.INSERTION_QUERY)
-    private val contentsSelectionStatement: PreparedStatement = connection.prepareStatement(ContentsSchema.SELECTION_QUERY)
+    private val contentsInsertionStatement: PreparedStatement
+    private val contentsSelectionStatement: PreparedStatement
 
     init {
         val statement: Statement = connection.createStatement()
@@ -30,6 +30,15 @@ class SQL {
         statement.executeUpdate("create table if not exists $RevisionSchema")
         statement.executeUpdate("create table if not exists $ContentsSchema")
         statement.close()
+
+        fileNameInsertionStatement = connection.prepareStatement(FileNameSchema.INSERTION_QUERY)
+        allFileNamesSelectionStatement = connection.prepareStatement(FileNameSchema.ALL_SELECTION_QUERY)
+
+        revisionInsertionStatement = connection.prepareStatement(RevisionSchema.INSERTION_QUERY)
+        revisionSelectionStatement = connection.prepareStatement(RevisionSchema.SELECTION_QUERY)
+
+        contentsInsertionStatement = connection.prepareStatement(ContentsSchema.INSERTION_QUERY)
+        contentsSelectionStatement = connection.prepareStatement(ContentsSchema.SELECTION_QUERY)
     }
 
     fun insert(methodHistory: RawMethodHistory) {
