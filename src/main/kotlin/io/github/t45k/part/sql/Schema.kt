@@ -11,7 +11,7 @@ class FileNameSchema {
 
 class RevisionSchema {
     companion object {
-        override fun toString() = "$TABLE_NAME (${Column.FILE_NAME} string, ${Column.COMMIT_HASH} string, ${Column.COMMIT_MESSAGE} string, ${Column.ID} integer primary key autoincrement"
+        override fun toString() = "$TABLE_NAME (${Column.FILE_NAME} string, ${Column.COMMIT_HASH} string, ${Column.COMMIT_MESSAGE} string, ${Column.ID} integer primary key autoincrement)"
         private const val TABLE_NAME = "revisions"
         const val INSERTION_QUERY = "insert into $TABLE_NAME (${Column.FILE_NAME}, ${Column.COMMIT_HASH}, ${Column.COMMIT_MESSAGE}) values(?, ?, ?)"
         const val SELECTION_QUERY = "select * from $TABLE_NAME where ${Column.FILE_NAME} = ?"
@@ -20,7 +20,7 @@ class RevisionSchema {
 
 class ContentsSchema {
     companion object {
-        override fun toString(): String = "contents (${Column.CONTENT} string, ${Column.ID} integer primary key"
+        override fun toString(): String = "$TABLE_NAME (${Column.CONTENT} string, ${Column.ID} integer primary key)"
         private const val TABLE_NAME = "contents"
         const val INSERTION_QUERY = "insert into $TABLE_NAME values(?, ?)"
         const val SELECTION_QUERY = "select * from $TABLE_NAME where ${Column.ID}=?"
