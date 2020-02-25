@@ -1,6 +1,7 @@
 package io.github.t45k.part.parser
 
 import org.eclipse.jdt.core.dom.MethodDeclaration
+import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +11,9 @@ internal class MethodASTParserTest {
     @Test
     fun testParseBinarySearch() {
         val location = "src/test/resources/sample/methods/CollectionsBinarySearch.mjava"
-        val binarySearch: MethodDeclaration = MethodASTParser(Paths.get(location)).parse()
+        val path = Paths.get(location)
+        val contents = String(Files.readAllBytes(path))
+        val binarySearch: MethodDeclaration = MethodASTParser(contents).parse()
         assertEquals("""private static <T>int indexedBinarySearch(List<? extends Comparable<? super T>> list,T key){
   int low=0;
   int high=list.size() - 1;
@@ -30,7 +33,9 @@ internal class MethodASTParserTest {
     @Test
     fun testParseMathMax() {
         val location = "src/test/resources/sample/methods/MathMax.mjava"
-        val mathMax: MethodDeclaration = MethodASTParser(Paths.get(location)).parse()
+        val path = Paths.get(location)
+        val contents = String(Files.readAllBytes(path))
+        val mathMax: MethodDeclaration = MethodASTParser(contents).parse()
         assertEquals("""public static int max(int a,int b){
   return a >= b ? a : b;
 }

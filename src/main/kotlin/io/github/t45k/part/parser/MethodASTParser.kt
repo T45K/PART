@@ -10,11 +10,8 @@ import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.MethodDeclaration
 import org.eclipse.jdt.core.dom.TypeDeclaration
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.getEclipseDefaultSettings
-import java.nio.file.Files
-import java.nio.file.Path
 
-class MethodASTParser(mjavaFilePath: Path) {
-    private val contents: String = String(Files.readAllBytes(mjavaFilePath))
+class MethodASTParser(private val contents: String) {
 
     fun parse(): MethodDeclaration {
         val parser: ASTParser = createParser()
