@@ -56,12 +56,12 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = "io.github.t45k.part.AppKt"
+    mainClassName = "io.github.t45k.part.PartMainKt"
 }
 
 val jar by tasks.getting(Jar::class) {
     manifest {
-        attributes["Main-Class"] = "io.github.t45k.part.AppKt"
+        attributes["Main-Class"] = "io.github.t45k.part.PartMainKt"
     }
 
     from(
