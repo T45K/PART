@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.toList
 
-class Miner {
+class MethodMiner {
     // root/organization/project
     fun miningAllProjects(rootPath: Path): List<RawMethodHistory> {
         val projects: List<Path> = Files.list(rootPath)
