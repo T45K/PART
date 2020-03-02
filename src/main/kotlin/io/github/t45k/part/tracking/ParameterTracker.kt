@@ -2,9 +2,25 @@ package io.github.t45k.part.tracking
 
 import com.google.common.annotations.VisibleForTesting
 import io.github.t45k.part.entity.MethodHistory
+import io.github.t45k.part.entity.Revision
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration
 
 class ParameterTracker(private val methodHistory: MethodHistory) {
+    // TODO impl
+    fun track() {
+        val revisions: Iterator<Revision> = methodHistory.revisions.iterator()
+        var parent: Revision = revisions.next()
+        while (revisions.hasNext()) {
+            val child: Revision = revisions.next()
+            val parentParams: List<Pair<String, String>> = convertSimpleParams(parent.parameters)
+            val childParams: List<Pair<String, String>> = convertSimpleParams(child.parameters)
+            if (parentParams == childParams) {
+                parent = child
+                continue
+            }
+        }
+    }
+
     @VisibleForTesting
     fun detectParametersDifferencing(params1: List<Pair<String, String>>, params2: List<Pair<String, String>>): DiffPattern {
         if (params1.toSet() == params2.toSet()) {
