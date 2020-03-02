@@ -16,10 +16,14 @@ class MethodMiner {
                 .toList()
 
         return Observable.fromIterable(projects)
-                .subscribeOn(Schedulers.computation())
-                .flatMap { Observable.fromIterable(mining(it)) }
+                .flatMap {
+                    Observable.just(it)
+                            .observeOn(Schedulers.computation())
+                            .map { project -> mining(project) }
+                }
                 .toList()
                 .blockingGet()
+                .flatten()
     }
 
     fun mining(projectPath: Path): List<RawMethodHistory> {
