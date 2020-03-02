@@ -4,11 +4,15 @@ import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.toList
 
 class MethodMiner {
+    private val logger: Logger = LoggerFactory.getLogger(MethodMiner::class.java)
+
     // root/organization/project
     fun miningAllProjects(rootPath: Path): List<RawMethodHistory> {
         val projects: List<Path> = Files.list(rootPath)
@@ -16,18 +20,25 @@ class MethodMiner {
                 .toList()
 
         return Observable.fromIterable(projects)
-                .subscribeOn(Schedulers.computation())
-                .flatMap { Observable.fromIterable(mining(it)) }
+                .flatMap {
+                    Observable.just(it)
+                            .observeOn(Schedulers.computation())
+                            .map { project -> mining(project) }
+                }
                 .toList()
                 .blockingGet()
+                .flatten()
     }
 
     fun mining(projectPath: Path): List<RawMethodHistory> {
-        return Files.walk(projectPath)
+        logger.info("Start mining in $projectPath")
+        val rawMethodHistories: List<RawMethodHistory> = Files.walk(projectPath)
                 .filter { it.toString().endsWith(".mjava") }
                 .map { it to GitLog(projectPath, it).execute() }
                 .map { constructRawMethodHistory(projectPath, it) }
                 .toList()
+        logger.info("End mining in $projectPath")
+        return rawMethodHistories
     }
 
     private fun constructRawMethodHistory(projectPath: Path, entity: Pair<Path, List<GitLog.LogData>>): RawMethodHistory {
