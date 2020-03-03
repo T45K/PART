@@ -46,5 +46,5 @@ class GitLog(private val projectRootPath: Path, private val filePath: Path) {
 
     private fun String.isCommitHash(): Boolean = this.matches(Regex("commit [0-9a-z]+"))
 
-    data class LogData(val commitHash: String, val commitMessage: String)
+    data class LogData(val commitHash: String, val commitMessage: List<String>, val path: Path)
 }
