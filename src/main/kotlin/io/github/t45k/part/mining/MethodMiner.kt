@@ -2,6 +2,8 @@ package io.github.t45k.part.mining
 
 import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
+import io.github.t45k.part.mining.git.GitCheckOut
+import io.github.t45k.part.mining.git.GitLogCommand
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import org.slf4j.Logger
@@ -34,17 +36,17 @@ class MethodMiner {
         logger.info("Start mining in $projectPath")
         val rawMethodHistories: List<RawMethodHistory> = Files.walk(projectPath)
                 .filter { it.toString().endsWith(".mjava") }
-                .map { it to GitLog(projectPath, it).execute() }
+                .map { it to GitLogCommand(projectPath, it).execute(Unit) }
                 .map { constructRawMethodHistory(projectPath, it) }
                 .toList()
         logger.info("End mining in $projectPath")
         return rawMethodHistories
     }
 
-    private fun constructRawMethodHistory(projectPath: Path, entity: Pair<Path, List<GitLog.LogData>>): RawMethodHistory {
+    private fun constructRawMethodHistory(projectPath: Path, entity: Pair<Path, List<GitLogCommand.LogData>>): RawMethodHistory {
         val gitCheckOutCommand = GitCheckOut(projectPath, entity.first)
         val rawRevisions: List<RawRevision> = entity.second
-                .map { RawRevision(it.commitHash, it.commitMessage, gitCheckOutCommand.execute(it.commitHash)) }
+                .map { RawRevision(it.commitHash, it.commitMessage.joinToString(" "), gitCheckOutCommand.execute(it.commitHash)) }
                 .toList()
         return RawMethodHistory(entity.first.toString(), rawRevisions)
     }
