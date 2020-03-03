@@ -1,14 +1,14 @@
-package io.github.t45k.part.mining
+package io.github.t45k.part.mining.git
 
 import com.github.kusumotolab.sdl4j.util.CommandLine
 import com.google.common.annotations.VisibleForTesting
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class GitLogCommand(private val projectRootPath: Path, private val filePath: Path) {
+class GitLogCommand(projectRootPath: Path, filePath: Path) : GitCommand<Unit, List<GitLogCommand.LogData>>(projectRootPath, filePath) {
     private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow")
 
-    fun execute(): List<LogData> {
+    override fun execute(input: Unit): List<LogData> {
         val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, "$filePath")
                 ?: return emptyList()
 

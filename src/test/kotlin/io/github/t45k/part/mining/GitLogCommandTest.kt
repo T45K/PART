@@ -1,5 +1,6 @@
 package io.github.t45k.part.mining
 
+import io.github.t45k.part.mining.git.GitLogCommand
 import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertEquals
