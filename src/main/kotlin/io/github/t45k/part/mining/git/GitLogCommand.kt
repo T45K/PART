@@ -9,7 +9,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow", "--name-status")
 
     override fun execute(input: Unit): List<LogData> {
-        val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, "$filePath")
+        val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, filePath.toString())
                 ?: return emptyList()
 
         return parseCommandLineResult(commandLineResult.outputLines)
@@ -18,6 +18,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     @VisibleForTesting
     fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
         return prettyPrintLog(rawLog)
+                .filterNot { it[it.size - 1][0] == 'D' }
                 .map { parseLog(it) }
     }
 
@@ -32,7 +33,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
         var startIndex = 0
         val prettyPrintedLogs: MutableList<List<String>> = rawLog.asSequence()
                 .mapIndexed { index, s -> index to s }
-                .filterIndexed { _, pair -> pair.second.isCommitHash() }
+                .filter { it.second.isCommitHash() }
                 .drop(1) // ignore first index(0)
                 .map { pair ->
                     val oneCommit: List<String> = rawLog.subList(startIndex, pair.first).filter { it.isNotBlank() }
@@ -47,10 +48,16 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
 
     private fun String.getPathFromNameStatus(): Path {
         val elements: List<String> = this.split(Regex("\\s")).filter { it.isNotEmpty() }
-        return if (elements[0].matches(Regex("[RC][0-9]+.*"))) {
-            Paths.get(elements[2])
-        } else {
-            Paths.get(elements[1])
+        return when {
+            elements[0].matches(Regex("[RC][0-9]+.*")) -> {
+                Paths.get(elements[2])
+            }
+            elements[0].matches(Regex("[AM]")) -> {
+                Paths.get(elements[1])
+            }
+            else -> {
+                throw RuntimeException("Unexpected modification $this of git")
+            }
         }
     }
 
