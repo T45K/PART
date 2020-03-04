@@ -52,11 +52,11 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
             elements[0].matches(Regex("[RC][0-9]+.*")) -> {
                 Paths.get(elements[2])
             }
-            elements[0] == "M" -> {
+            elements[0].matches(Regex("[AM]")) -> {
                 Paths.get(elements[1])
             }
             else -> {
-                throw RuntimeException("Unexpected modification of git")
+                throw RuntimeException("Unexpected modification $this of git")
             }
         }
     }
