@@ -9,7 +9,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow", "--name-status")
 
     override fun execute(input: Unit): List<LogData> {
-        val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, "$filePath")
+        val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, filePath.toString())
                 ?: return emptyList()
 
         return parseCommandLineResult(commandLineResult.outputLines)
