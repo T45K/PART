@@ -18,7 +18,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     @VisibleForTesting
     fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
         return prettyPrintLog(rawLog)
-                .filterNot { it[it.size - 1][0] == 'D' }
+                .filter { it[it.size - 1][0].isChange() }
                 .map { parseLog(it) }
     }
 
@@ -60,5 +60,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
             }
         }
     }
+
+    private fun Char.isChange() = this == 'R' || this == 'C' || this == 'A' || this == 'M'
 
 }
