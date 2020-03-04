@@ -4,6 +4,7 @@ import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
 import io.github.t45k.part.mining.git.GitCatFileCommand
 import io.github.t45k.part.mining.git.GitLogCommand
+import io.github.t45k.part.mining.git.LogData
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import org.slf4j.Logger
@@ -43,10 +44,10 @@ class MethodMiner {
         return rawMethodHistories
     }
 
-    private fun constructRawMethodHistory(projectPath: Path, entity: Pair<Path, List<GitLogCommand.LogData>>): RawMethodHistory {
-        val gitCheckOutCommand = GitCatFileCommand(projectPath, entity.first)
+    private fun constructRawMethodHistory(projectPath: Path, entity: Pair<Path, List<LogData>>): RawMethodHistory {
+        val catFile = GitCatFileCommand(projectPath)
         val rawRevisions: List<RawRevision> = entity.second
-                .map { RawRevision(it.commitHash, it.commitMessage.joinToString(" "), gitCheckOutCommand.execute(it.commitHash)) }
+                .map { RawRevision(it.commitHash, it.commitMessage.joinToString(" "), catFile.execute(it)) }
                 .toList()
         return RawMethodHistory(entity.first.toString(), rawRevisions)
     }
