@@ -5,7 +5,7 @@ import com.google.common.annotations.VisibleForTesting
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class GitLogCommand(projectRootPath: Path, filePath: Path) : GitCommand<Unit, List<GitLogCommand.LogData>>(projectRootPath, filePath) {
+class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitCommand<Unit, List<LogData>>(projectRootPath) {
     private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow", "--name-status")
 
     override fun execute(input: Unit): List<LogData> {
@@ -54,5 +54,4 @@ class GitLogCommand(projectRootPath: Path, filePath: Path) : GitCommand<Unit, Li
         }
     }
 
-    data class LogData(val commitHash: String, val commitMessage: List<String>, val path: Path)
 }
