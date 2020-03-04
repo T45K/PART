@@ -1,6 +1,7 @@
 package io.github.t45k.part.mining
 
 import io.github.t45k.part.mining.git.GitLogCommand
+import io.github.t45k.part.mining.git.LogData
 import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +32,7 @@ internal class GitLogCommandTest {
             |    init
             |
             |A       A.md""".trimMargin().split("\n")
-        val logCommandDataList: List<GitLogCommand.LogData> = gitLog.parseCommandLineResult(rawLog)
+        val logCommandDataList: List<LogData> = gitLog.parseCommandLineResult(rawLog)
 
         assertEquals("92bf42e8ac418a94793329508a40543f107a4266", logCommandDataList[0].commitHash)
         assertEquals("    add", logCommandDataList[0].commitMessage[0])

@@ -5,8 +5,8 @@ import com.google.common.annotations.VisibleForTesting
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class GitLogCommand(projectRootPath: Path, filePath: Path) : GitCommand<Unit, List<GitLogCommand.LogData>>(projectRootPath, filePath) {
-    private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow")
+class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitCommand<Unit, List<LogData>>(projectRootPath) {
+    private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow", "--name-status")
 
     override fun execute(input: Unit): List<LogData> {
         val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, "$filePath")
@@ -30,11 +30,10 @@ class GitLogCommand(projectRootPath: Path, filePath: Path) : GitCommand<Unit, Li
 
     private fun prettyPrintLog(rawLog: List<String>): List<List<String>> {
         var startIndex = 0
-        val prettyPrintedLogs: MutableList<List<String>> = rawLog
-                .asSequence()
+        val prettyPrintedLogs: MutableList<List<String>> = rawLog.asSequence()
                 .mapIndexed { index, s -> index to s }
                 .filterIndexed { _, pair -> pair.second.isCommitHash() }
-                .drop(1)
+                .drop(1) // ignore first index(0)
                 .map { pair ->
                     val oneCommit: List<String> = rawLog.subList(startIndex, pair.first).filter { it.isNotBlank() }
                     startIndex = pair.first
@@ -48,12 +47,11 @@ class GitLogCommand(projectRootPath: Path, filePath: Path) : GitCommand<Unit, Li
 
     private fun String.getPathFromNameStatus(): Path {
         val elements: List<String> = this.split(Regex("\\s")).filter { it.isNotEmpty() }
-        return if (elements[0].matches(Regex("([RC])[0-9]+.*"))) {
+        return if (elements[0].matches(Regex("[RC][0-9]+.*"))) {
             Paths.get(elements[2])
         } else {
             Paths.get(elements[1])
         }
     }
 
-    data class LogData(val commitHash: String, val commitMessage: List<String>, val path: Path)
 }
