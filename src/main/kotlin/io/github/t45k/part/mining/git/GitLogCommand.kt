@@ -44,7 +44,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
         return prettyPrintedLogs
     }
 
-    private fun String.isCommitHash(): Boolean = this.contains(Regex("commit [0-9a-z]+"))
+    private fun String.isCommitHash(): Boolean = this.matches(Regex("commit [0-9a-z]{40}.*"))
 
     private fun String.getPathFromNameStatus(): Path {
         val elements: List<String> = this.split(Regex("\\s")).filter { it.isNotEmpty() }
