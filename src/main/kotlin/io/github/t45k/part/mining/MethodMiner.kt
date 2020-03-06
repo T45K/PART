@@ -25,7 +25,7 @@ class MethodMiner {
         return Observable.fromIterable(projects)
                 .flatMap {
                     Observable.just(it)
-                            .observeOn(Schedulers.computation())
+                            .subscribeOn(Schedulers.computation())
                             .map { project -> mining(project) }
                 }
                 .toList()
