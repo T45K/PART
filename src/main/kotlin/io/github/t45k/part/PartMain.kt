@@ -46,7 +46,7 @@ fun main(args: Array<String>) {
 
         Configuration.Mode.MINING -> {
             app.logger.info("[Start]\tmining")
-            val sql = SQL()
+            val sql = SQL(config.dbPath)
             val miner = MethodMiner()
             if (config.inputDir != null) {
                 miner.miningAllProjects(config.inputDir!!)
@@ -68,14 +68,17 @@ class Configuration {
     @Option(name = "-p", aliases = ["--projects"], usage = "project dir", handler = PathOptionHandler::class)
     var project: Path? = null
 
+    @Option(name = "-d", aliases = ["--db-path"], usage = "data base path")
+    var dbPath: String = "./db.sqlite3"
+
     lateinit var mode: Mode
 
     @Option(name = "-m", aliases = ["--mode"], usage = "select mode: FINER_GIT, MINING, or TRACKING", required = true)
     fun setMode(s: String) {
         mode = when (s) {
-            "FINER_GIT", "F" -> Mode.FINER_GIT
-            "MINING", "M" -> Mode.MINING
-            "TRACKING", "T" -> Mode.TRACKING
+            "FINER_GIT", "F", "f" -> Mode.FINER_GIT
+            "MINING", "M", "m" -> Mode.MINING
+            "TRACKING", "T", "t" -> Mode.TRACKING
             else -> throw RuntimeException("Invalid mode selection")
         }
     }
