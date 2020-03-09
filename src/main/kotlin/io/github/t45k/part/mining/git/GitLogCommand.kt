@@ -18,7 +18,7 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     @VisibleForTesting
     fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
         return prettyPrintLog(rawLog)
-                .filter { it[it.size - 1][0].isChange() }
+                .filter { it.isNotEmpty() && it[it.size - 1][0].isChange() }
                 .map { parsePrettyPrintedLog(it) }
     }
 
