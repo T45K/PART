@@ -19,6 +19,7 @@ class MethodMiner {
     // root/organization/project
     fun miningAllProjects(rootPath: Path): List<RawMethodHistory> {
         val projects: List<Path> = Files.list(rootPath)
+                .filter { Files.isDirectory(it) }
                 .flatMap { Files.list(it) }
                 .toList()
 
