@@ -107,7 +107,6 @@ class SQL {
         fileNameInsertionStatement.close()
         revisionInsertionStatement.close()
         contentsInsertionStatement.close()
-        fileNameInsertionStatement.clearParameters()
         connection.close()
     }
 }

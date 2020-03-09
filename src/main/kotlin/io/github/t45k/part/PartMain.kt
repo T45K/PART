@@ -45,16 +45,16 @@ fun main(args: Array<String>) {
         }
 
         Configuration.Mode.MINING -> {
-            app.logger.info("start mining")
+            app.logger.info("[Start]\tmining")
             val sql = SQL()
             val miner = MethodMiner()
             if (config.inputDir != null) {
                 miner.miningAllProjects(config.inputDir!!)
-                        .forEach { sql.insert(it) }
             } else {
-                miner.mining(config.project!!).forEach { sql.insert(it) }
-            }
-            app.logger.info("end mining")
+                miner.mining(config.project!!)
+            }.blockingSubscribe { sql.insert(it) }
+            app.logger.info("[End]\tmining")
+            sql.close()
         }
         Configuration.Mode.TRACKING -> {
         }
