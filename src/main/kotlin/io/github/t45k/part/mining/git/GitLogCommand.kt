@@ -37,6 +37,9 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
                 .drop(1) // ignore first index(0)
                 .map { pair ->
                     val oneCommit: List<String> = rawLog.subList(startIndex, pair.first).filter { it.isNotBlank() }
+                    if (oneCommit[1].isMergeCommit()) {
+                        return@map emptyList<String>()
+                    }
                     startIndex = pair.first
                     oneCommit
                 }.toMutableList()
@@ -45,6 +48,8 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     }
 
     private fun String.isCommitHash(): Boolean = this.matches(Regex("commit [0-9a-z]{40}.*"))
+
+    private fun String.isMergeCommit(): Boolean = this.matches(Regex("Merge: [0-9a-z]{7} [0-9a-z]{7}"))
 
     private fun String.getPathFromNameStatus(): Path {
         val elements: List<String> = this.split(Regex("\\s")).filter { it.isNotEmpty() }
