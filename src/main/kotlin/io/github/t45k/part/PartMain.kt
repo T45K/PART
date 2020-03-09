@@ -52,7 +52,7 @@ fun main(args: Array<String>) {
                 miner.miningAllProjects(config.inputDir!!)
             } else {
                 miner.mining(config.project!!)
-            }.blockingSubscribe { println(it) }
+            }.blockingSubscribe { sql.insert(it) }
             app.logger.info("[End]\tmining")
             sql.close()
         }
