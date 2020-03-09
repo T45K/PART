@@ -54,4 +54,22 @@ internal class GitLogCommandTest {
         val log: List<LogData> = gitLogCommand.parseCommandLineResult(emptyLog)
         assert(log.isEmpty())
     }
+
+    @Test
+    fun testParseMergeCommitLog() {
+        val gitLogCommand = GitLogCommand(Paths.get("."), Paths.get("."))
+        val mergeCommitLog: List<String> = """commit f0a018fdad209aed4f47e5da68a1d88bb1650cc7
+            |Merge: 1698ec1 0c043aa
+            |Author: Stephane Nicoll <snicoll@pivotal.io>
+            |Date:   Sat Feb 1 16:15:20 2020 +0100
+            |
+            |    <OriginalCommitID:199cea2> Merge pull request #20001 from izeye
+            |
+            |    * pr/20001:
+            |      Polish
+            |
+            |    Closes gh-20001""".trimMargin().split("\n")
+        val log: List<LogData> = gitLogCommand.parseCommandLineResult(mergeCommitLog)
+        assert(log.isEmpty())
+    }
 }
