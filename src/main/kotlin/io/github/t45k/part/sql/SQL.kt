@@ -12,8 +12,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
-class SQL {
-    private val connection: Connection = DriverManager.getConnection("jdbc:sqlite:./db.sqlite3")
+class SQL(dbPath: String) {
+    private val connection: Connection = DriverManager.getConnection("jdbc:sqlite:$dbPath")
             ?: throw RuntimeException("Bad db connection")
     private val fileNameInsertionStatement: PreparedStatement
     private val allFileNamesSelectionStatement: PreparedStatement
