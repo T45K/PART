@@ -18,11 +18,11 @@ class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitComm
     @VisibleForTesting
     fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
         return prettyPrintLog(rawLog)
-                .filter { it[it.size - 1][0].isChange() }
-                .map { parseLog(it) }
+                .filter { it.isNotEmpty() && it[it.size - 1][0].isChange() }
+                .map { parsePrettyPrintedLog(it) }
     }
 
-    private fun parseLog(prettyPrintedLog: List<String>): LogData {
+    private fun parsePrettyPrintedLog(prettyPrintedLog: List<String>): LogData {
         val commitHash: String = prettyPrintedLog[0].split(" ")[1]
         val commitMessage: List<String> = prettyPrintedLog.subList(3, prettyPrintedLog.size - 1)
         val path: Path = prettyPrintedLog[prettyPrintedLog.size - 1].getPathFromNameStatus()

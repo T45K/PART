@@ -19,13 +19,14 @@ class MethodMiner {
     // root/organization/project
     fun miningAllProjects(rootPath: Path): List<RawMethodHistory> {
         val projects: List<Path> = Files.list(rootPath)
+                .filter { Files.isDirectory(it) }
                 .flatMap { Files.list(it) }
                 .toList()
 
         return Observable.fromIterable(projects)
                 .flatMap {
                     Observable.just(it)
-                            .observeOn(Schedulers.computation())
+                            .subscribeOn(Schedulers.computation())
                             .map { project -> mining(project) }
                 }
                 .toList()
