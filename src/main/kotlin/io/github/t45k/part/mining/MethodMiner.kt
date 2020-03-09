@@ -27,7 +27,7 @@ class MethodMiner {
                 .flatMap {
                     Observable
                             .just(it)
-                            .observeOn(Schedulers.computation())
+                            .observeOn(Schedulers.io())
                             .flatMap { project -> mining(project) }
                 }
     }
