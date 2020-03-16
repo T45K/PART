@@ -29,6 +29,9 @@ dependencies {
     // Use JDT AST
     compile("org.eclipse.jdt:org.eclipse.jdt.core:3.20.0")
 
+    // Use JGit
+    compile("org.eclipse.jgit:org.eclipse.jgit:5.6.1.202002131546-r")
+
     // Use guava
     compile("com.google.guava:guava:28.2-jre")
 

@@ -1,27 +1,19 @@
 package io.github.t45k.part.mining.git
 
-import com.github.kusumotolab.sdl4j.util.CommandLine
-import java.nio.file.Path
+import org.eclipse.jgit.internal.storage.file.FileRepository
+import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.lib.ObjectLoader
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.util.stream.Collectors
 
-class GitCatFileCommand(projectRootPath: Path) : GitCommand<LogData, String>(projectRootPath) {
-    private val gitCatFileCommand: Array<String> = arrayOf("git", "cat-file", "-p")
-
-    /**
-     * execute "git cat-file -p <hash>:<path>" command
-     *
-     * @param input LogData(commit hash + file path)
-     * @return file contents on target commit
-     */
-    override fun execute(input: LogData): String {
-        val (commitHash: String, _, filePath: Path) = input
-        val result: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitCatFileCommand, "$commitHash:$filePath")
-                ?: return ""
-
-        return if (result.isSuccess) {
-            result.outputLines.joinToString(" ")
-        } else {
-            logger.warn(result.outputLines.toString())
-            ""
-        }
+class GitCatFileCommand(repository: FileRepository) : GitCommand<ObjectId, String>(repository) {
+    override fun execute(input: ObjectId): String {
+        val loader: ObjectLoader = repository.open(input)
+        val inputStream: InputStream = loader.openStream()
+        val inputStreamReader = InputStreamReader(inputStream)
+        val bufferedReader = BufferedReader(inputStreamReader)
+        return bufferedReader.lines().collect(Collectors.joining(" "))
     }
 }

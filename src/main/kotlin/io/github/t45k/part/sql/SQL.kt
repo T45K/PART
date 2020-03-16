@@ -1,11 +1,7 @@
 package io.github.t45k.part.sql
 
-import io.github.t45k.part.entity.MethodHistory
 import io.github.t45k.part.entity.RawMethodHistory
-import io.github.t45k.part.entity.Revision
-import io.github.t45k.part.parser.MethodASTParser
-import org.eclipse.jdt.core.dom.MethodDeclaration
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration
+import io.github.t45k.part.entity.RawRevision
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -21,14 +17,10 @@ class SQL(dbPath: String) {
     private val revisionInsertionStatement: PreparedStatement
     private val revisionSelectionStatement: PreparedStatement
 
-    private val contentsInsertionStatement: PreparedStatement
-    private val contentsSelectionStatement: PreparedStatement
-
     init {
         val statement: Statement = connection.createStatement()
         statement.executeUpdate("create table if not exists $FileNameSchema")
         statement.executeUpdate("create table if not exists $RevisionSchema")
-        statement.executeUpdate("create table if not exists $ContentsSchema")
         statement.close()
 
         fileNameInsertionStatement = connection.prepareStatement(FileNameSchema.INSERTION_QUERY)
@@ -36,9 +28,6 @@ class SQL(dbPath: String) {
 
         revisionInsertionStatement = connection.prepareStatement(RevisionSchema.INSERTION_QUERY)
         revisionSelectionStatement = connection.prepareStatement(RevisionSchema.SELECTION_QUERY)
-
-        contentsInsertionStatement = connection.prepareStatement(ContentsSchema.INSERTION_QUERY)
-        contentsSelectionStatement = connection.prepareStatement(ContentsSchema.SELECTION_QUERY)
     }
 
     fun insert(methodHistory: RawMethodHistory) {
@@ -47,20 +36,11 @@ class SQL(dbPath: String) {
         fileNameInsertionStatement.executeUpdate()
 
         for (revision in methodHistory.rawRevisions) {
-            val (commitHash, commitMessage, contents) = revision
+            val (rawBody, commitMessage) = revision
             revisionInsertionStatement.setString(1, fileName)
-            revisionInsertionStatement.setString(2, commitHash)
+            revisionInsertionStatement.setString(2, rawBody)
             revisionInsertionStatement.setString(3, commitMessage)
             revisionInsertionStatement.executeUpdate()
-
-            val generatedKey: ResultSet = revisionInsertionStatement.generatedKeys
-            generatedKey.next()
-            val id: Int = generatedKey.getInt(1)
-            generatedKey.close()
-
-            contentsInsertionStatement.setString(1, contents)
-            contentsInsertionStatement.setInt(2, id)
-            contentsInsertionStatement.executeUpdate()
         }
     }
 
@@ -74,39 +54,21 @@ class SQL(dbPath: String) {
         return methods
     }
 
-    fun fetchMethodHistory(fileName: String): MethodHistory {
+    fun fetchMethodHistory(fileName: String): RawMethodHistory {
         revisionSelectionStatement.setString(1, fileName)
         val revisionSelectionResults: ResultSet = revisionSelectionStatement.executeQuery()
-        val revisionAndIds = mutableListOf<Triple<String, String, Int>>()
+        val rawRevisions = mutableListOf<RawRevision>()
         while (revisionSelectionResults.next()) {
-            val commit: Pair<String, String> = revisionSelectionResults.getString(Column.COMMIT_HASH) to revisionSelectionResults.getString(Column.COMMIT_MESSAGE)
-            val id: Int = revisionSelectionResults.getInt(Column.ID)
-            revisionAndIds.add(Triple(commit.first, commit.second, id))
+            rawRevisions.add(RawRevision(revisionSelectionResults.getString(Column.CONTENT), revisionSelectionResults.getString(Column.COMMIT_MESSAGE)))
         }
         revisionSelectionResults.close()
 
-        val revisions = mutableListOf<Revision>()
-        for (revisionAndId in revisionAndIds) {
-            val (commitHash, commitMessage, id) = revisionAndId
-            contentsSelectionStatement.setInt(1, id)
-            val contentSelectionResult: ResultSet = contentsSelectionStatement.executeQuery()
-            contentSelectionResult.next()
-            val content: String = contentSelectionResult.getString(Column.CONTENT)
-            contentSelectionResult.close()
-
-            val methodDeclaration: MethodDeclaration = MethodASTParser(content).parse()
-
-            @Suppress("UNCHECKED_CAST")
-            revisions.add(Revision(commitHash, methodDeclaration.parameters() as List<SingleVariableDeclaration>, methodDeclaration.body, commitMessage))
-        }
-
-        return MethodHistory(fileName, revisions)
+        return RawMethodHistory(fileName, rawRevisions)
     }
 
     fun close() {
         fileNameInsertionStatement.close()
         revisionInsertionStatement.close()
-        contentsInsertionStatement.close()
         connection.close()
     }
 }
