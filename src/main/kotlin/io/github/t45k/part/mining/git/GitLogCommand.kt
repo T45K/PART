@@ -1,71 +1,72 @@
 package io.github.t45k.part.mining.git
 
-import com.github.kusumotolab.sdl4j.util.CommandLine
-import com.google.common.annotations.VisibleForTesting
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.diff.DiffConfig
+import org.eclipse.jgit.diff.DiffEntry
+import org.eclipse.jgit.diff.DiffFormatter
+import org.eclipse.jgit.diff.RawTextComparator
+import org.eclipse.jgit.internal.storage.file.FileRepository
+import org.eclipse.jgit.lib.Config
+import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.revwalk.FollowFilter
+import org.eclipse.jgit.revwalk.RenameCallback
+import org.eclipse.jgit.revwalk.RevCommit
+import org.eclipse.jgit.revwalk.RevWalk
+import org.eclipse.jgit.util.io.DisabledOutputStream
 import java.nio.file.Path
-import java.nio.file.Paths
 
-class GitLogCommand(projectRootPath: Path, private val filePath: Path) : GitCommand<Unit, List<LogData>>(projectRootPath) {
-    private val gitLogCommand: Array<String> = arrayOf("git", "log", "--follow", "--name-status")
 
-    override fun execute(input: Unit): List<LogData> {
-        val commandLineResult: CommandLine.CommandLineResult = CommandLine().forceExecute(projectRootPath.toFile(), *gitLogCommand, filePath.toString())
-                ?: return emptyList()
+class GitLogCommand(repository: FileRepository) : GitCommand<Path, List<Pair<ObjectId, String>>>(repository) {
+    private val git: Git = Git(repository)
 
-        return parseCommandLineResult(commandLineResult.outputLines)
+    override fun execute(input: Path): List<Pair<ObjectId, String>> {
+        val followFilter: FollowFilter = FollowFilter.create(input.toString(), Config().get(DiffConfig.KEY))
+        followFilter.renameCallback = DiffCollector()
+
+        val walk = git.log().addPath(input.toString()).call() as RevWalk
+        walk.treeFilter = followFilter
+
+        return parseRevWalk(walk.toList(), input.toString())
     }
 
-    @VisibleForTesting
-    fun parseCommandLineResult(rawLog: List<String>): List<LogData> {
-        return prettyPrintLog(rawLog)
-                .filter { it.isNotEmpty() && it[it.size - 1][0].isChange() }
-                .map { parsePrettyPrintedLog(it) }
-    }
+    private fun parseRevWalk(commits: List<RevCommit>, startPath: String): List<Pair<ObjectId, String>> {
+        val diffFormatter = DiffFormatter(DisabledOutputStream.INSTANCE)
+        diffFormatter.setRepository(repository)
+        diffFormatter.setDiffComparator(RawTextComparator.DEFAULT)
+        diffFormatter.isDetectRenames = true
 
-    private fun parsePrettyPrintedLog(prettyPrintedLog: List<String>): LogData {
-        val commitHash: String = prettyPrintedLog[0].split(" ")[1]
-        val commitMessage: List<String> = prettyPrintedLog.subList(3, prettyPrintedLog.size - 1)
-        val path: Path = prettyPrintedLog[prettyPrintedLog.size - 1].getPathFromNameStatus()
-        return LogData(commitHash, commitMessage, path)
-    }
+        var followPath: String = startPath
+        val fileChanges: MutableList<Pair<ObjectId, String>> = mutableListOf()
+        for (i in 0 until commits.size - 1) {
+            val diff: DiffEntry = diffFormatter.scan(commits[i + 1], commits[i]).firstOrNull { it.newPath == followPath }
+                    ?: continue
 
-    private fun prettyPrintLog(rawLog: List<String>): List<List<String>> {
-        var startIndex = 0
-        val prettyPrintedLogs: MutableList<List<String>> = rawLog.asSequence()
-                .mapIndexed { index, s -> index to s }
-                .filter { it.second.isCommitHash() }
-                .drop(1) // ignore first index(0)
-                .map { pair ->
-                    val oneCommit: List<String> = rawLog.subList(startIndex, pair.first).filter { it.isNotBlank() }
-                    if (oneCommit[1].isMergeCommit()) {
-                        return@map emptyList<String>()
-                    }
-                    startIndex = pair.first
-                    oneCommit
-                }.toMutableList()
-        prettyPrintedLogs.add(rawLog.subList(startIndex, rawLog.size).filter { it.isNotBlank() })
-        return prettyPrintedLogs
-    }
-
-    private fun String.isCommitHash(): Boolean = this.matches(Regex("commit [0-9a-z]{40}.*"))
-
-    private fun String.isMergeCommit(): Boolean = this.matches(Regex("Merge: [0-9a-z]{7} [0-9a-z]{7}"))
-
-    private fun String.getPathFromNameStatus(): Path {
-        val elements: List<String> = this.split(Regex("\\s")).filter { it.isNotEmpty() }
-        return when {
-            elements[0].matches(Regex("[RC][0-9]+.*")) -> {
-                Paths.get(elements[2])
+            if (diff.isFileChanged()) {
+                followPath = diff.oldPath
             }
-            elements[0].matches(Regex("[AM]")) -> {
-                Paths.get(elements[1])
+
+            fileChanges.addObjectIdIfAppropriate(diff.newId.toObjectId(), commits[i].fullMessage)
+
+            // Add initial file
+            if (i == commits.size - 2) {
+                fileChanges.addObjectIdIfAppropriate(diff.oldId.toObjectId(), "<init>")
             }
-            else -> {
-                throw RuntimeException("Unexpected modification $this of git")
-            }
+        }
+        return fileChanges
+    }
+
+    private fun MutableList<Pair<ObjectId, String>>.addObjectIdIfAppropriate(objectId: ObjectId, commitMessage: String) {
+        if (this.size == 0 || this.last().first != objectId) {
+            this.add(objectId to commitMessage)
         }
     }
 
-    private fun Char.isChange() = this == 'R' || this == 'C' || this == 'A' || this == 'M'
+    private fun DiffEntry.isFileChanged(): Boolean = this.changeType == DiffEntry.ChangeType.RENAME || this.changeType == DiffEntry.ChangeType.COPY
 
+    private class DiffCollector : RenameCallback() {
+        var diffs: MutableList<DiffEntry> = mutableListOf()
+        override fun renamed(diff: DiffEntry) {
+            diffs.add(diff)
+        }
+    }
 }
