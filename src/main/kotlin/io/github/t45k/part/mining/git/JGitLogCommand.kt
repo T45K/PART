@@ -35,25 +35,33 @@ class JGitLogCommand(private val repository: FileRepository) {
         diffFormatter.setDiffComparator(RawTextComparator.DEFAULT)
         diffFormatter.isDetectRenames = true
 
-        var parentCommit: RevCommit = commits[0]
-        var currentPath: String = startPath
-        return commits.drop(1)
-                .mapNotNull {
-                    val targetDiff: DiffEntry? = diffFormatter.scan(it, parentCommit).firstOrNull { diffEntry -> diffEntry.oldPath == currentPath || diffEntry.newPath == currentPath }
-                    parentCommit = it
+        var followPath: String = startPath
+        val fileChanges: MutableList<Pair<ObjectId, String>> = mutableListOf()
+        for (i in 0 until commits.size - 1) {
+            val diff: DiffEntry = diffFormatter.scan(commits[i + 1], commits[i]).firstOrNull { it.newPath == followPath }
+                    ?: continue
 
-                    if (targetDiff == null || targetDiff.changeType == DiffEntry.ChangeType.DELETE) {
-                        return@mapNotNull null
-                    }
+            if (diff.isFileChanged()) {
+                followPath = diff.oldPath
+            }
 
-                    if (targetDiff.isChanged(currentPath)) {
-                        currentPath = targetDiff.oldPath
-                    }
-                    targetDiff.newId.toObjectId() to it.fullMessage
-                }
+            fileChanges.addObjectIdIfAppropriate(diff.newId.toObjectId(), commits[i].fullMessage)
+
+            // Add initial file
+            if (i == commits.size - 2) {
+                fileChanges.addObjectIdIfAppropriate(diff.oldId.toObjectId(), "<init>")
+            }
+        }
+        return fileChanges
     }
 
-    private fun DiffEntry.isChanged(path: String): Boolean = this.changeType == DiffEntry.ChangeType.RENAME || this.changeType == DiffEntry.ChangeType.COPY && this.newPath.contains(path)
+    private fun MutableList<Pair<ObjectId, String>>.addObjectIdIfAppropriate(objectId: ObjectId, commitMessage: String) {
+        if (this.size == 0 || this.last().first != objectId) {
+            this.add(objectId to commitMessage)
+        }
+    }
+
+    private fun DiffEntry.isFileChanged(): Boolean = this.changeType == DiffEntry.ChangeType.RENAME || this.changeType == DiffEntry.ChangeType.COPY
 
     private class DiffCollector : RenameCallback() {
         var diffs: MutableList<DiffEntry> = mutableListOf()
