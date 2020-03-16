@@ -52,6 +52,7 @@ class MethodMiner {
     private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): RawMethodHistory {
         val catFileCommand = GitCatFileCommand(repository)
         val rawRevisions: List<RawRevision> = entity
+                .filter { it.first != ObjectId.zeroId() }
                 .map { RawRevision(catFileCommand.execute(it.first), it.second) }
                 .toList()
         return RawMethodHistory(filePath.toString(), rawRevisions)
