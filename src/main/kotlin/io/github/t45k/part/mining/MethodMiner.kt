@@ -4,9 +4,10 @@ import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
 import io.github.t45k.part.mining.git.GitCatFileCommand
 import io.github.t45k.part.mining.git.GitLogCommand
-import io.github.t45k.part.mining.git.LogData
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
+import org.eclipse.jgit.internal.storage.file.FileRepository
+import org.eclipse.jgit.lib.ObjectId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -37,19 +38,20 @@ class MethodMiner {
         val mJavaFiles = Files.walk(projectPath)
                 .filter { it.toString().endsWith(".mjava") }.toList()
 
+        val repository = FileRepository("$projectPath/.git")
         val rawMethodHistories: Observable<RawMethodHistory> = Observable.fromIterable(mJavaFiles)
-                .map { it to GitLogCommand(projectPath, it).execute(Unit) }
-                .map { constructRawMethodHistory(projectPath, it) }
+                .map { it to GitLogCommand(repository).execute(it) }
+                .map { constructRawMethodHistory(repository, it.first, it.second) }
         logger.info("[End]\tmining\ton $projectPath")
 
         return rawMethodHistories
     }
 
-    private fun constructRawMethodHistory(projectPath: Path, entity: Pair<Path, List<LogData>>): RawMethodHistory {
-        val catFileCommand = GitCatFileCommand(projectPath)
-        val rawRevisions: List<RawRevision> = entity.second
-                .map { RawRevision(it.commitHash, it.commitMessage.joinToString(" "), catFileCommand.execute(it)) }
+    private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): RawMethodHistory {
+        val catFileCommand = GitCatFileCommand(repository)
+        val rawRevisions: List<RawRevision> = entity
+                .map { RawRevision(catFileCommand.execute(it.first), it.second) }
                 .toList()
-        return RawMethodHistory(entity.first.toString(), rawRevisions)
+        return RawMethodHistory(filePath.toString(), rawRevisions)
     }
 }
