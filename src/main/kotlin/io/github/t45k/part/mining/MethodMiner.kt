@@ -18,7 +18,7 @@ class MethodMiner {
     private val logger: Logger = LoggerFactory.getLogger(MethodMiner::class.java)
 
     // root/organization/project
-    fun miningAllProjects(rootPath: Path): Observable<RawMethodHistory> {
+    fun miningAllProjects(rootPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> {
         val projects: List<Path> = Files.list(rootPath)
                 .filter { Files.isDirectory(it) }
                 .flatMap { Files.list(it) }
@@ -29,14 +29,16 @@ class MethodMiner {
                     Observable
                             .just(it)
                             .observeOn(Schedulers.io())
-                            .flatMap { project -> mining(project) }
+                            .flatMap { project -> mining(project, suffix) }
                 }
     }
 
-    fun mining(projectPath: Path): Observable<RawMethodHistory> {
+    fun mining(projectPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> {
         logger.info("[Start]\tmining\ton $projectPath")
         val mJavaFiles = Files.walk(projectPath)
-                .filter { it.toString().endsWith(".mjava") }.toList()
+                .filter { it.toString().endsWith(suffix) }
+                .map { projectPath.relativize(it) }
+                .toList()
 
         val repository = FileRepository("$projectPath/.git")
         val rawMethodHistories: Observable<RawMethodHistory> = Observable.fromIterable(mJavaFiles)
