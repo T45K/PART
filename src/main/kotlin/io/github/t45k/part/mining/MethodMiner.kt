@@ -35,18 +35,16 @@ class MethodMiner {
 
     fun mining(projectPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> {
         logger.info("[Start]\tmining\ton $projectPath")
-        val mJavaFiles = Files.walk(projectPath)
+        val repository = FileRepository("$projectPath/.git")
+        val rawMethodHistories = Files.walk(projectPath)
                 .filter { it.toString().endsWith(suffix) }
                 .map { projectPath.relativize(it) }
-                .toList()
-
-        val repository = FileRepository("$projectPath/.git")
-        val rawMethodHistories: Observable<RawMethodHistory> = Observable.fromIterable(mJavaFiles)
                 .map { it to GitLogCommand(repository).execute(it) }
                 .map { constructRawMethodHistory(repository, it.first, it.second) }
-        logger.info("[End]\tmining\ton $projectPath")
+                .toList()
 
-        return rawMethodHistories
+        logger.info("[End]\tmining\ton $projectPath")
+        return Observable.fromIterable(rawMethodHistories)
     }
 
     private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): RawMethodHistory {
