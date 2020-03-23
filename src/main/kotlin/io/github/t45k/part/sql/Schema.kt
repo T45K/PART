@@ -18,10 +18,20 @@ class RevisionSchema {
     }
 }
 
+class TrackingResultSchema {
+    companion object {
+        private const val TABLE_NAME = "results"
+        override fun toString() = "$TABLE_NAME (${Column.FILE_NAME} string, ${Column.DIFF_PATTERN} string)"
+        const val INSERTION_QUERY = "insert into $TABLE_NAME (${Column.FILE_NAME}, ${Column.DIFF_PATTERN}) values(?, ?)"
+    }
+}
+
 class Column {
     companion object {
         const val FILE_NAME = "file_name"
         const val COMMIT_MESSAGE = "commit_message"
         const val CONTENT = "content"
+        const val DIFF_PATTERN = "diff_pattern"
     }
+
 }
