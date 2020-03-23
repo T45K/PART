@@ -2,6 +2,7 @@ package io.github.t45k.part.sql
 
 import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
+import io.github.t45k.part.entity.TrackingResult
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -17,10 +18,13 @@ class SQL(dbPath: String) {
     private val revisionInsertionStatement: PreparedStatement
     private val revisionSelectionStatement: PreparedStatement
 
+    private val resultInsertionStatement: PreparedStatement
+
     init {
         val statement: Statement = connection.createStatement()
         statement.executeUpdate("create table if not exists $FileNameSchema")
         statement.executeUpdate("create table if not exists $RevisionSchema")
+        statement.executeUpdate("create table if not exists $TrackingResultSchema")
         statement.close()
 
         fileNameInsertionStatement = connection.prepareStatement(FileNameSchema.INSERTION_QUERY)
@@ -28,9 +32,11 @@ class SQL(dbPath: String) {
 
         revisionInsertionStatement = connection.prepareStatement(RevisionSchema.INSERTION_QUERY)
         revisionSelectionStatement = connection.prepareStatement(RevisionSchema.SELECTION_QUERY)
+
+        resultInsertionStatement = connection.prepareStatement(TrackingResultSchema.INSERTION_QUERY)
     }
 
-    fun insert(methodHistory: RawMethodHistory) {
+    fun insertMethodHistory(methodHistory: RawMethodHistory) {
         val fileName: String = methodHistory.fileName
         fileNameInsertionStatement.setString(1, fileName)
         fileNameInsertionStatement.executeUpdate()
@@ -64,6 +70,12 @@ class SQL(dbPath: String) {
         revisionSelectionResults.close()
 
         return RawMethodHistory(fileName, rawRevisions)
+    }
+
+    fun insertResult(result: TrackingResult) {
+        resultInsertionStatement.setString(1, result.fileName)
+        resultInsertionStatement.setString(2, result.diffPattern.toString())
+        resultInsertionStatement.executeUpdate()
     }
 
     fun close() {

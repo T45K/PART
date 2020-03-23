@@ -3,6 +3,9 @@ package io.github.t45k.part
 import io.github.t45k.part.controller.FinerGitController
 import io.github.t45k.part.mining.MethodMiner
 import io.github.t45k.part.sql.SQL
+import io.github.t45k.part.tracking.ParameterTracker
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -52,11 +55,21 @@ fun main(args: Array<String>) {
                 miner.miningAllProjects(config.inputDir!!)
             } else {
                 miner.mining(config.project!!)
-            }.blockingSubscribe { sql.insert(it) }
+            }.blockingSubscribe { sql.insertMethodHistory(it) }
             app.logger.info("[End]\tmining")
             sql.close()
         }
         Configuration.Mode.TRACKING -> {
+            app.logger.info("[Start]\ttracking")
+            val sql = SQL(config.dbPath)
+            val tracker = ParameterTracker()
+            Observable.fromIterable(sql.fetchAllFileNames())
+                    .flatMap {
+                        Observable.just(it)
+                                .observeOn(Schedulers.io())
+                                .flatMap { tracker.track(it, sql) }
+                    }
+                    .blockingSubscribe { sql.insertResult(it) }
         }
     }
 }
