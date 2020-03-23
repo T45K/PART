@@ -1,24 +1,36 @@
 package io.github.t45k.part.tracking
 
 import com.google.common.annotations.VisibleForTesting
-import io.github.t45k.part.entity.MethodHistory
-import io.github.t45k.part.entity.Revision
+import io.github.t45k.part.entity.TrackingResult
+import io.github.t45k.part.parser.MethodASTParser
+import io.github.t45k.part.sql.SQL
+import io.reactivex.Observable
+import org.eclipse.jdt.core.dom.MethodDeclaration
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration
 
-class ParameterTracker(private val methodHistory: MethodHistory) {
-    // TODO impl
-    fun track() {
-        val revisions: Iterator<Revision> = methodHistory.revisions.iterator()
-        var parent: Revision = revisions.next()
-        while (revisions.hasNext()) {
-            val child: Revision = revisions.next()
-            val parentParams: List<Pair<String, String>> = convertSimpleParams(parent.parameters)
-            val childParams: List<Pair<String, String>> = convertSimpleParams(child.parameters)
-            if (parentParams == childParams) {
-                parent = child
-                continue
+class ParameterTracker {
+    @Suppress("UNCHECKED_CAST")
+    fun track(fileName: String, sql: SQL): Observable<TrackingResult> {
+        if (!fileName.contains("src/main/java")) {
+            return Observable.empty()
+        }
+
+        val methodASTs: Iterator<MethodDeclaration> = sql.fetchMethodHistory(fileName).rawRevisions
+                .map { MethodASTParser(it.rawBody).parse() }
+                .iterator()
+
+        val trackingResults: MutableList<TrackingResult> = mutableListOf()
+        var parent: MethodDeclaration = methodASTs.next()
+        while (methodASTs.hasNext()) {
+            val child: MethodDeclaration = methodASTs.next()
+            val parentParams = convertSimpleParams(parent.parameters() as List<SingleVariableDeclaration>)
+            val childParams = convertSimpleParams(child.parameters() as List<SingleVariableDeclaration>)
+            parent = child
+            if (parentParams != childParams) {
+                trackingResults.add(TrackingResult(fileName, detectParametersDifferencing(parentParams, childParams)))
             }
         }
+        return Observable.fromIterable(trackingResults)
     }
 
     @VisibleForTesting
