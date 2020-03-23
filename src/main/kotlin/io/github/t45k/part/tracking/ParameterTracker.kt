@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration
 
 class ParameterTracker {
+
     @Suppress("UNCHECKED_CAST")
     fun track(fileName: String, sql: SQL): Observable<TrackingResult> {
         if (!fileName.contains("src/main/java")) {
