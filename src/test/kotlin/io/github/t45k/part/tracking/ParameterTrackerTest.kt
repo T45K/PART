@@ -1,6 +1,5 @@
 package io.github.t45k.part.tracking
 
-import io.github.t45k.part.entity.MethodHistory
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.dom.AST
@@ -28,7 +27,7 @@ internal class ParameterTrackerTest {
 
         assert(basicMathMaxParams == basicMathMin)
 
-        val parameterTracker = ParameterTracker(MethodHistory("", emptyList()))
+        val parameterTracker = ParameterTracker()
         assertEquals(ParameterTracker.DiffPattern.REORDERING, parameterTracker.detectParametersDifferencing(basicMathMaxParams, reorderedMathMax))
         assertEquals(ParameterTracker.DiffPattern.SIZE_CHANGED, parameterTracker.detectParametersDifferencing(basicMathMaxParams, sizeChangedMathMax))
         assertEquals(ParameterTracker.DiffPattern.TYPE_CHANGED, parameterTracker.detectParametersDifferencing(basicMathMaxParams, typeChangedMathMax))
