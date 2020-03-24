@@ -89,6 +89,10 @@ class SQL(dbPath: String) {
     fun close() {
         fileNameInsertionStatement.close()
         revisionInsertionStatement.close()
+        allFileNamesSelectionStatement.close()
+        revisionSelectionStatement.close()
+        resultInsertionStatement.close()
+
         connection.close()
     }
 }
