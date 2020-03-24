@@ -20,6 +20,10 @@ class ParameterTracker {
                 .map { MethodASTParser(it.rawBody).parse() }
                 .iterator()
 
+        if (!methodASTs.hasNext()) {
+            return Observable.empty()
+        }
+
         val trackingResults: MutableList<TrackingResult> = mutableListOf()
         var parent: MethodDeclaration = methodASTs.next()
         while (methodASTs.hasNext()) {
