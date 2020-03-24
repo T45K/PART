@@ -24,6 +24,7 @@ class ParameterTracker {
                 .iterator()
 
         // TODO ここに入ることは本来ないはず．どっかで原因調査
+        // 可能性: メソッドのパースに失敗してる
         if (!methodASTs.hasNext()) {
             logger.warn("Histories of $fileName was not found")
             return Observable.empty()
