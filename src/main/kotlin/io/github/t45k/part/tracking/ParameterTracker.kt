@@ -7,8 +7,11 @@ import io.github.t45k.part.sql.SQL
 import io.reactivex.Observable
 import org.eclipse.jdt.core.dom.MethodDeclaration
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class ParameterTracker {
+    private val logger: Logger = LoggerFactory.getLogger(ParameterTracker::class.java)
 
     @Suppress("UNCHECKED_CAST")
     fun track(fileName: String, sql: SQL): Observable<TrackingResult> {
@@ -19,6 +22,12 @@ class ParameterTracker {
         val methodASTs: Iterator<MethodDeclaration> = sql.fetchMethodHistory(fileName).rawRevisions
                 .map { MethodASTParser(it.rawBody).parse() }
                 .iterator()
+
+        // TODO ここに入ることは本来ないはず．どっかで原因調査
+        if (!methodASTs.hasNext()) {
+            logger.warn("Histories of $fileName was not found")
+            return Observable.empty()
+        }
 
         val trackingResults: MutableList<TrackingResult> = mutableListOf()
         var parent: MethodDeclaration = methodASTs.next()
