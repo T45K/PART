@@ -14,7 +14,7 @@ class RevisionSchema {
         private const val TABLE_NAME = "revisions"
         override fun toString() = "$TABLE_NAME (${Column.FILE_NAME} string, ${Column.CONTENT} string, ${Column.COMMIT_MESSAGE} string)"
         const val INSERTION_QUERY = "insert into $TABLE_NAME (${Column.FILE_NAME}, ${Column.CONTENT}, ${Column.COMMIT_MESSAGE}) values(?, ?, ?)"
-        const val SELECTION_QUERY = "select * from $TABLE_NAME where ${Column.FILE_NAME}=?"
+        const val SELECTION_QUERY = "select * from $TABLE_NAME where ${Column.FILE_NAME} = ?"
     }
 }
 

@@ -70,6 +70,7 @@ fun main(args: Array<String>) {
                                 .flatMap { tracker.track(it, sql) }
                     }
                     .blockingSubscribe { sql.insertResult(it) }
+            sql.close()
         }
     }
 }
