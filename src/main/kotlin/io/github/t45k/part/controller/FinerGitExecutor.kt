@@ -1,19 +1,23 @@
 package io.github.t45k.part.controller
 
-import com.github.kusumotolab.sdl4j.util.CommandLine
+import finergit.FinerGitConfig
+import finergit.FinerGitMain
+import org.kohsuke.args4j.CmdLineParser
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class FinerGitController {
-    private val logger: Logger = LoggerFactory.getLogger(FinerGitController::class.java)
+class FinerGitExecutor {
+    private val logger: Logger = LoggerFactory.getLogger(FinerGitExecutor::class.java)
 
     // root/organization/project
     fun executeAllProject(rootPath: Path) {
         Files.list(rootPath)
+                .filter { Files.isDirectory(it) }
                 .flatMap { Files.list(it) }
+                .filter { Files.isDirectory(it) }
                 .forEach { execute(it, createFGDir(rootPath, it)) }
     }
 
@@ -23,15 +27,15 @@ class FinerGitController {
     }
 
     fun execute(projectPath: Path, outputPath: Path = Path.of("$projectPath-fg")) {
-        logger.info("start FinerGit execution on ${projectPath.fileName}")
-        val result: CommandLine.CommandLineResult? = CommandLine().forceExecute("git", "fg", "-s", projectPath.toString(), "-d", outputPath.toString())
+        logger.info("[Start]\tFinerGit execution on $projectPath")
 
-        if (result == null) {
-            logger.warn("failed force execution in $projectPath")
-        } else if (!result.isSuccess) {
-            logger.warn(result.outputLines.joinToString("\n"))
-        } else {
-            logger.info("finish FinerGit execution on ${projectPath.fileName}")
-        }
+        val config = FinerGitConfig()
+        val cmdLineParser = CmdLineParser(config)
+        cmdLineParser.parseArgument("create", "-s", projectPath.toString(), "-d", outputPath.toString())
+
+        val finerGitMain = FinerGitMain(config)
+        finerGitMain.exec()
+
+        logger.info("[End]\tFinerGit execution on $projectPath")
     }
 }
