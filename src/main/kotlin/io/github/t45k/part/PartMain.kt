@@ -31,12 +31,9 @@ fun main(args: Array<String>) {
         exitProcess(1)
     }
 
-    if (config.inputDir == null && config.project == null) {
-        throw InvalidRuntimeArgumentsException("Subject was not specified")
-    }
-
     when (config.mode) {
         Configuration.Mode.FINER_GIT -> {
+            checkInput(config)
             app.logger.info("start FinerGit execution")
             val controller = FinerGitController()
             if (config.inputDir != null) {
@@ -48,6 +45,7 @@ fun main(args: Array<String>) {
         }
 
         Configuration.Mode.MINING -> {
+            checkInput(config)
             app.logger.info("[Start]\tmining")
             val sql = SQL(config.dbPath)
             val miner = MethodMiner()
@@ -59,6 +57,7 @@ fun main(args: Array<String>) {
             app.logger.info("[End]\tmining")
             sql.close()
         }
+
         Configuration.Mode.TRACKING -> {
             app.logger.info("[Start]\ttracking")
             val sql = SQL(config.dbPath)
@@ -74,6 +73,9 @@ fun main(args: Array<String>) {
         }
     }
 }
+
+private fun checkInput(config: Configuration) = config.inputDir ?: config.project
+?: throw InvalidRuntimeArgumentsException("Subject was not specified")
 
 class Configuration {
     @Option(name = "-i", aliases = ["--input-dir"], usage = "input dir", handler = PathOptionHandler::class)
