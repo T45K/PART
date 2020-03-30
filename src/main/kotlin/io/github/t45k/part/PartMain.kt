@@ -1,6 +1,6 @@
 package io.github.t45k.part
 
-import io.github.t45k.part.controller.FinerGitController
+import io.github.t45k.part.controller.FinerGitExecutor
 import io.github.t45k.part.mining.MethodMiner
 import io.github.t45k.part.sql.SQL
 import io.github.t45k.part.tracking.ParameterTracker
@@ -35,7 +35,7 @@ fun main(args: Array<String>) {
         Configuration.Mode.FINER_GIT -> {
             checkInput(config)
             app.logger.info("start FinerGit execution")
-            val controller = FinerGitController()
+            val controller = FinerGitExecutor()
             if (config.inputDir != null) {
                 controller.executeAllProject(config.inputDir!!)
             } else {

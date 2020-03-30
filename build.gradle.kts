@@ -23,6 +23,9 @@ dependencies {
     // Align versions of all Kotlin components 
     compile(platform("org.jetbrains.kotlin:kotlin-bom"))
 
+    // Use FinerGit as local library
+    compile(fileTree("./libs/FinerGit.jar"))
+
     // Use the Kotlin JDK 8 standard library.
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
