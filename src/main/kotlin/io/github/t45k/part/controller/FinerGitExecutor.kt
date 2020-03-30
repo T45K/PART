@@ -31,7 +31,7 @@ class FinerGitExecutor {
 
         val config = FinerGitConfig()
         val cmdLineParser = CmdLineParser(config)
-        cmdLineParser.parseArgument("create", "-s", projectPath.toString(), "-d", outputPath.toString())
+        cmdLineParser.parseArgument("-s", projectPath.toString(), "-d", outputPath.toString())
 
         val finerGitMain = FinerGitMain(config)
         finerGitMain.exec()
