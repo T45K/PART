@@ -15,16 +15,12 @@ class ParameterTracker {
 
     @Suppress("UNCHECKED_CAST")
     fun track(fileName: String, sql: SQL): Observable<TrackingResult> {
-        if (!fileName.contains("src/main/java")) {
-            return Observable.empty()
-        }
-
         val methodASTs: Iterator<MethodDeclaration> = sql.fetchMethodHistory(fileName).rawRevisions
                 .map { MethodASTParser(it.rawBody).parse() }
                 .iterator()
 
         // TODO ここに入ることは本来ないはず．どっかで原因調査
-        // 可能性: メソッドのパースに失敗してる
+        // マイニング時に変更がないと変更履歴がDBに入らない可能性
         if (!methodASTs.hasNext()) {
             logger.warn("Histories of $fileName was not found")
             return Observable.empty()
