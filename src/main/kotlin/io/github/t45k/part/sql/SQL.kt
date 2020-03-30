@@ -67,10 +67,12 @@ class SQL(dbPath: String) {
     fun fetchMethodHistory(fileName: String): RawMethodHistory {
         revisionSelectionStatement.setString(1, fileName)
         val revisionSelectionResults: ResultSet = revisionSelectionStatement.executeQuery()
+        /*
         if (revisionSelectionResults.isClosed) {
             logger.warn("Query by $fileName was not found")
             return RawMethodHistory(fileName, emptyList())
         }
+        */
         val rawRevisions = mutableListOf<RawRevision>()
         while (revisionSelectionResults.next()) {
             rawRevisions.add(RawRevision(revisionSelectionResults.getString(Column.CONTENT), revisionSelectionResults.getString(Column.COMMIT_MESSAGE)))
