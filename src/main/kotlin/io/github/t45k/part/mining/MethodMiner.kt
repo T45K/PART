@@ -5,6 +5,7 @@ import io.github.t45k.part.entity.RawRevision
 import io.github.t45k.part.mining.git.GitCatFileCommand
 import io.github.t45k.part.mining.git.GitLogCommand
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.ObjectId
@@ -18,41 +19,33 @@ class MethodMiner {
     private val logger: Logger = LoggerFactory.getLogger(MethodMiner::class.java)
 
     // root/organization/project
-    fun miningAllProjects(rootPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> {
-        val projects: List<Path> = Files.list(rootPath)
-                .filter { Files.isDirectory(it) }
-                .flatMap { Files.list(it) }
-                .toList()
-
-        return Observable.fromIterable(projects)
-                .flatMap {
-                    Observable
-                            .just(it)
-                            .observeOn(Schedulers.io())
-                            .flatMap { project -> mining(project, suffix) }
-                }
-    }
+    fun miningAllProjects(rootPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> =
+            listAsObservable(rootPath)
+                    .filter { Files.isDirectory(it) }
+                    .flatMap { listAsObservable(it) }
+                    .filter { Files.isDirectory(it) }
+                    .flatMap { mining(it).subscribeOn(Schedulers.computation()) }
 
     fun mining(projectPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> {
-        logger.info("[Start]\tmining\ton $projectPath")
         val repository = FileRepository("$projectPath/.git")
-        val rawMethodHistories = Files.walk(projectPath)
-                .filter { it.toString().endsWith(suffix) }
+        val gitLogCommand = GitLogCommand(repository)
+        return Observable.just(projectPath)
+                .doOnSubscribe { logger.info("[Start]\tmining\ton $projectPath") }
+                .flatMap { Observable.fromIterable(Files.walk(projectPath).toList()) }
                 .map { projectPath.relativize(it) }
-                .map { it to GitLogCommand(repository).execute(it) }
-                .map { constructRawMethodHistory(repository, it.first, it.second) }
-                .toList()
-
-        logger.info("[End]\tmining\ton $projectPath")
-        return Observable.fromIterable(rawMethodHistories)
+                .map { it to gitLogCommand.execute(it) }
+                .flatMap { constructRawMethodHistory(repository, it.first, it.second).toObservable() }
+                .doFinally { logger.info("[End]\tmining\ton $projectPath") }
     }
 
-    private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): RawMethodHistory {
+    private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): Single<RawMethodHistory> {
         val catFileCommand = GitCatFileCommand(repository)
-        val rawRevisions: List<RawRevision> = entity
+        return Observable.fromIterable(entity)
                 .filter { it.first != ObjectId.zeroId() }
                 .map { RawRevision(catFileCommand.execute(it.first), it.second) }
                 .toList()
-        return RawMethodHistory(filePath.toString(), rawRevisions)
+                .map { RawMethodHistory(filePath.toString(), it) }
     }
+
+    private fun listAsObservable(path: Path) = Observable.fromIterable(Files.list(path).toList())
 }
