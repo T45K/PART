@@ -24,7 +24,7 @@ class MethodMiner {
                     .filter { Files.isDirectory(it) }
                     .flatMap { listAsObservable(it) }
                     .filter { Files.isDirectory(it) }
-                    .flatMap { mining(it).subscribeOn(Schedulers.computation()) }
+                    .flatMap { mining(it, suffix).subscribeOn(Schedulers.computation()) }
 
     fun mining(projectPath: Path, suffix: String = ".mjava"): Observable<RawMethodHistory> {
         val repository = FileRepository("$projectPath/.git")
@@ -32,13 +32,18 @@ class MethodMiner {
         return Observable.just(projectPath)
                 .doOnSubscribe { logger.info("[Start]\tmining\ton $projectPath") }
                 .flatMap { Observable.fromIterable(Files.walk(projectPath).toList()) }
+                .filter { it.isProductFile(suffix) }
                 .map { projectPath.relativize(it) }
                 .map { it to gitLogCommand.execute(it) }
                 .flatMap { constructRawMethodHistory(repository, it.first, it.second).toObservable() }
                 .doFinally { logger.info("[End]\tmining\ton $projectPath") }
     }
 
-    private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): Single<RawMethodHistory> {
+    private fun Path.isProductFile(suffix: String, infix: String = "/src/main/java"): Boolean = this.toString().contains(infix) && this.toString().endsWith(suffix)
+
+    private
+
+    fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): Single<RawMethodHistory> {
         val catFileCommand = GitCatFileCommand(repository)
         return Observable.fromIterable(entity)
                 .filter { it.first != ObjectId.zeroId() }
