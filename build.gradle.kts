@@ -45,7 +45,8 @@ dependencies {
     compile("io.reactivex.rxjava2:rxkotlin:2.4.0")
 
     // Use logger
-    compile("ch.qos.logback:logback-classic:1.1.3")
+    // Use library in FinerGit
+    // compile("ch.qos.logback:logback-classic:1.2.3")
 
     // Use args4j
     compile("args4j:args4j:2.33")
