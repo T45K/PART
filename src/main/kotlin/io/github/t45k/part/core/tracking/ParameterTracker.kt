@@ -1,4 +1,4 @@
-package io.github.t45k.part.tracking
+package io.github.t45k.part.core.tracking
 
 import com.google.common.annotations.VisibleForTesting
 import io.github.t45k.part.entity.TrackingResult
