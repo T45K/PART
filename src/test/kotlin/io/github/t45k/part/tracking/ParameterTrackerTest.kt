@@ -1,5 +1,6 @@
 package io.github.t45k.part.tracking
 
+import io.github.t45k.part.core.tracking.ParameterTracker
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.dom.AST

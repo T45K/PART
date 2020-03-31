@@ -1,9 +1,9 @@
 package io.github.t45k.part
 
-import io.github.t45k.part.controller.FinerGitExecutor
-import io.github.t45k.part.mining.MethodMiner
+import io.github.t45k.part.core.preprocess.FinerGitExecutor
+import io.github.t45k.part.core.preprocess.MethodMiner
+import io.github.t45k.part.core.tracking.ParameterTracker
 import io.github.t45k.part.sql.SQL
-import io.github.t45k.part.tracking.ParameterTracker
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import org.kohsuke.args4j.CmdLineException
@@ -33,29 +33,30 @@ fun main(args: Array<String>) {
 
     when (config.mode) {
         Configuration.Mode.FINER_GIT -> {
-            checkInput(config)
-            app.logger.info("start FinerGit execution")
-            val controller = FinerGitExecutor()
-            if (config.inputDir != null) {
-                controller.executeAllProject(config.inputDir!!)
-            } else {
-                controller.execute(config.project!!)
-            }
-            app.logger.info("end FinerGit execution")
+            val finerGitExecutor = FinerGitExecutor(config)
+
+            config.inputDir?.let {
+                val input: Path = config.inputDir!!
+                val output = input.parent.resolve("fg")
+                finerGitExecutor.execute(input, output, finerGitExecutor::doOnAllProjects)
+            } ?: config.project?.let {
+                val input: Path = config.project!!
+                val output = Path.of("$input-fg")
+                finerGitExecutor.execute(input, output, finerGitExecutor::doOnSingleProject)
+            } ?: throw InvalidRuntimeArgumentsException("Subject was not specified")
         }
 
         Configuration.Mode.MINING -> {
-            checkInput(config)
-            app.logger.info("[Start]\tmining")
-            val sql = SQL(config.dbPath)
-            val miner = MethodMiner()
-            if (config.inputDir != null) {
-                miner.miningAllProjects(config.inputDir!!)
-            } else {
-                miner.mining(config.project!!)
-            }.blockingSubscribe { sql.insertMethodHistory(it) }
-            app.logger.info("[End]\tmining")
-            sql.close()
+            val methodMiner = MethodMiner(config)
+            val suffix = ".mjava"
+
+            config.inputDir?.let {
+                val input: Path = config.inputDir!!
+                methodMiner.execute(input, suffix, methodMiner::doOnAllProjects)
+            } ?: config.project?.let {
+                val input: Path = config.project!!
+                methodMiner.execute(input, suffix, methodMiner::doOnSingleProject)
+            } ?: throw InvalidRuntimeArgumentsException("Subject was not specified")
         }
 
         Configuration.Mode.TRACKING -> {
@@ -74,8 +75,6 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun checkInput(config: Configuration) = config.inputDir ?: config.project
-?: throw InvalidRuntimeArgumentsException("Subject was not specified")
 
 class Configuration {
     @Option(name = "-i", aliases = ["--input-dir"], usage = "input dir", handler = PathOptionHandler::class)
@@ -95,7 +94,7 @@ class Configuration {
             "FINER_GIT", "F", "f" -> Mode.FINER_GIT
             "MINING", "M", "m" -> Mode.MINING
             "TRACKING", "T", "t" -> Mode.TRACKING
-            else -> throw RuntimeException("Invalid mode selection")
+            else -> throw InvalidModeSelectionException("Invalid mode selection")
         }
     }
 
@@ -105,3 +104,4 @@ class Configuration {
 }
 
 class InvalidRuntimeArgumentsException(override val message: String) : RuntimeException()
+class InvalidModeSelectionException(override val message: String) : RuntimeException()

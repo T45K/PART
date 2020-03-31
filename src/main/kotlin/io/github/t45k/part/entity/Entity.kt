@@ -1,6 +1,6 @@
 package io.github.t45k.part.entity
 
-import io.github.t45k.part.tracking.ParameterTracker
+import io.github.t45k.part.core.tracking.ParameterTracker
 import org.eclipse.jdt.core.dom.Block
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration
 
