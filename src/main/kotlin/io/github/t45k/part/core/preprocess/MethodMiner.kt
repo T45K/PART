@@ -43,12 +43,13 @@ class MethodMiner(config: Configuration) : Preprocessor<String, Observable<RawMe
                 .flatMap { Observable.fromIterable(Files.walk(input).toList()) }
                 .filter { it.isProductFile(suffix) }
                 .map { input.relativize(it) }
-                .map { it to gitLogCommand.execute(it) }
+                .map { it to gitLogCommand.execute(it.toString()) }
+                .filter { it.second.size > 1 }
                 .flatMap { constructRawMethodHistory(repository, it.first, it.second).toObservable() }
                 .doFinally { logger.info("[End]\tmining\ton $input") }
     }
 
-    private fun Path.isProductFile(suffix: String, infix: String = "/src/main/java"): Boolean = this.toString().contains(infix) && this.toString().endsWith(suffix)
+    private fun Path.isProductFile(suffix: String): Boolean = this.toString().contains(config.infix) && this.toString().endsWith(suffix)
 
     private fun constructRawMethodHistory(repository: FileRepository, filePath: Path, entity: List<Pair<ObjectId, String>>): Single<RawMethodHistory> {
         val catFileCommand = GitCatFileCommand(repository)
