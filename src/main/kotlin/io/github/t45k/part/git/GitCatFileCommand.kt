@@ -1,4 +1,4 @@
-package io.github.t45k.part.mining.git
+package io.github.t45k.part.git
 
 import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.ObjectId

@@ -75,7 +75,6 @@ fun main(args: Array<String>) {
     }
 }
 
-
 class Configuration {
     @Option(name = "-i", aliases = ["--input-dir"], usage = "input dir", handler = PathOptionHandler::class)
     var inputDir: Path? = null
@@ -85,6 +84,9 @@ class Configuration {
 
     @Option(name = "-d", aliases = ["--db-path"], usage = "data base path")
     var dbPath: String = "./db.sqlite3"
+
+    @Option(name = "-ifx", aliases = ["--infix"], usage = "infix that is contained by mining target files")
+    var infix: String = "src/main/java"
 
     lateinit var mode: Mode
 
