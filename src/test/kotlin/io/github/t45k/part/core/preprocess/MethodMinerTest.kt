@@ -16,7 +16,7 @@ internal class MethodMinerTest {
         val miner = MethodMiner(config)
 
         val path = Paths.get("./src/test/resources/sample/fg-sample")
-        cloneRepositoryIfNotExists(path, "https://github.com:T45K/fg-sample.git")
+        cloneRepositoryIfNotExists(path, "https://github.com/T45K/fg-sample.git")
         val list: MutableList<RawMethodHistory> = miner.doOnSingleProject(path, ".mjava")
                 .toList()
                 .blockingGet()
