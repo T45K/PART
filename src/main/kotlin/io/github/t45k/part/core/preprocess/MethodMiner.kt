@@ -3,8 +3,8 @@ package io.github.t45k.part.core.preprocess
 import io.github.t45k.part.Configuration
 import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
-import io.github.t45k.part.mining.git.GitCatFileCommand
-import io.github.t45k.part.mining.git.GitLogCommand
+import io.github.t45k.part.git.GitCatFileCommand
+import io.github.t45k.part.git.GitLogCommand
 import io.github.t45k.part.sql.SQL
 import io.reactivex.Observable
 import io.reactivex.Single
