@@ -6,6 +6,8 @@ import io.github.t45k.part.entity.RawRevision
 import io.github.t45k.part.git.GitCatFileCommand
 import io.github.t45k.part.git.GitLogCommand
 import io.github.t45k.part.sql.SQL
+import io.github.t45k.part.util.listAsObservable
+import io.github.t45k.part.util.walkAsObservable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -13,7 +15,6 @@ import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.ObjectId
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.streams.toList
 
 class MethodMiner(config: Configuration) : Preprocessor<String, Observable<RawMethodHistory>>(config) {
 
@@ -40,7 +41,7 @@ class MethodMiner(config: Configuration) : Preprocessor<String, Observable<RawMe
         val gitLogCommand = GitLogCommand(repository)
         return Observable.just(input)
                 .doOnSubscribe { logger.info("[Start]\tmining\ton $input") }
-                .flatMap { Observable.fromIterable(Files.walk(input).toList()) }
+                .flatMap { walkAsObservable(it) }
                 .filter { it.isProductFile(suffix) }
                 .map { input.relativize(it) }
                 .map { it to gitLogCommand.execute(it.toString()) }
@@ -59,6 +60,4 @@ class MethodMiner(config: Configuration) : Preprocessor<String, Observable<RawMe
                 .toList()
                 .map { RawMethodHistory(filePath.toString(), it) }
     }
-
-    private fun listAsObservable(path: Path) = Observable.fromIterable(Files.list(path).toList())
 }
