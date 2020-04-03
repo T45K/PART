@@ -10,5 +10,5 @@ abstract class Preprocessor<Auxiliary, Output>(protected val config: Configurati
 
     abstract fun execute(input: Path, auxiliary: Auxiliary, executeMethod: (Path, Auxiliary) -> Output)
     abstract fun doOnAllProjects(rootPath: Path, auxiliary: Auxiliary): Output
-    abstract fun doOnSingleProject(input: Path, auxiliary: Auxiliary): Output
+    abstract fun doOnSingleProject(project: Path, auxiliary: Auxiliary): Output
 }
