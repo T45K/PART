@@ -25,9 +25,9 @@ class FinerGitExecutor(config: Configuration) : Preprocessor<Path, Observable<Fi
     // root/organization/project
     override fun doOnAllProjects(rootPath: Path, outputPath: Path): Observable<FinerGitMain> =
             listAsObservable(rootPath)
-                    .filter(Files::isDirectory)
-                    .flatMap(::listAsObservable)
-                    .filter(Files::isDirectory)
+                    .filter { Files.isDirectory(it) }
+                    .flatMap { listAsObservable(it) }
+                    .filter { Files.isDirectory(it) }
                     .flatMap { doOnSingleProject(it, createFGDir(outputPath, it)).subscribeOn(Schedulers.io()) }
 
     override fun doOnSingleProject(project: Path, outputPath: Path): Observable<FinerGitMain> = Observable.just(project)
