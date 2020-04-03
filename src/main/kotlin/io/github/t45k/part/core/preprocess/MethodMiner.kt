@@ -36,18 +36,18 @@ class MethodMiner(config: Configuration) : Preprocessor<String, Observable<RawMe
                     .filter { Files.isDirectory(it) }
                     .flatMap { doOnSingleProject(it, suffix).subscribeOn(Schedulers.computation()) }
 
-    override fun doOnSingleProject(input: Path, suffix: String): Observable<RawMethodHistory> {
-        val repository = FileRepository("$input/.git")
+    override fun doOnSingleProject(project: Path, suffix: String): Observable<RawMethodHistory> {
+        val repository = FileRepository("$project/.git")
         val gitLogCommand = GitLogCommand(repository)
-        return Observable.just(input)
-                .doOnSubscribe { logger.info("[Start]\tmining\ton $input") }
+        return Observable.just(project)
+                .doOnSubscribe { logger.info("[Start]\tmining\ton $project") }
                 .flatMap { walkAsObservable(it) }
                 .filter { it.isProductFile(suffix) }
-                .map { input.relativize(it) }
+                .map { project.relativize(it) }
                 .map { it to gitLogCommand.execute(it.toString()) }
                 .filter { it.second.size > 1 }
                 .flatMap { constructRawMethodHistory(repository, it.first, it.second).toObservable() }
-                .doFinally { logger.info("[End]\tmining\ton $input") }
+                .doFinally { logger.info("[End]\tmining\ton $project") }
     }
 
     private fun Path.isProductFile(suffix: String): Boolean = this.toString().contains(config.infix) && this.toString().endsWith(suffix)
