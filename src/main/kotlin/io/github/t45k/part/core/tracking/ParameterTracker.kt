@@ -21,6 +21,7 @@ class ParameterTracker {
 
         if (!methodASTs.hasNext()) {
             logger.warn("Histories of $fileName was not found")
+            return@fromCallable emptyList<TrackingResult>()
         }
 
         val trackingResults: MutableList<TrackingResult> = mutableListOf()
