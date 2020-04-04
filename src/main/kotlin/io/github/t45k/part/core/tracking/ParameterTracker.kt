@@ -16,8 +16,7 @@ class ParameterTracker {
     @Suppress("UNCHECKED_CAST")
     fun track(fileName: String, sql: SQL): Observable<List<TrackingResult>> = Observable.fromCallable {
         val methodASTs: Iterator<MethodDeclaration> = sql.fetchMethodHistory(fileName).rawRevisions
-                .map { MethodASTParser(it.rawBody).parse() }
-                .requireNoNulls()
+                .mapNotNull { MethodASTParser(it.rawBody).parse() }
                 .iterator()
 
         if (!methodASTs.hasNext()) {
