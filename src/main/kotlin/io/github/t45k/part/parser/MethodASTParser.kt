@@ -13,12 +13,16 @@ import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.getEclipseDe
 
 class MethodASTParser(private val contents: String) {
 
-    fun parse(): MethodDeclaration {
+    fun parse(): MethodDeclaration? {
         val parser: ASTParser = createParser()
         parser.setSource(contents.toCharArray())
 
-        val typeDeclaration: TypeDeclaration = parser.createAST(NullProgressMonitor()) as TypeDeclaration
-        return typeDeclaration.methods[0]
+        return try {
+            val typeDeclaration: TypeDeclaration = parser.createAST(NullProgressMonitor()) as TypeDeclaration
+            typeDeclaration.methods[0]
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun createParser(): ASTParser {
