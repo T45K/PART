@@ -65,9 +65,9 @@ fun main(args: Array<String>) {
             val sql = SQL(config.dbPath)
             val tracker = ParameterTracker()
             Observable.fromIterable(sql.fetchAllFileNames())
-                    .flatMap { tracker.track(it, sql).subscribeOn(Schedulers.io()) }
+                    .flatMap { tracker.track(it, sql) }
                     .flatMap { Observable.fromIterable(it) }
-                    .blockingSubscribe { sql.insertResult(it) }
+                    .subscribe { sql.insertResult(it) }
             sql.close()
             app.logger.info("[End]\ttracking")
         }
