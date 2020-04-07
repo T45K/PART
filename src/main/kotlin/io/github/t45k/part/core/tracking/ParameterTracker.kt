@@ -14,20 +14,14 @@ class ParameterTracker {
     private val logger: Logger = LoggerFactory.getLogger(ParameterTracker::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    fun track(fileName: String, sql: SQL): Observable<TrackingResult> {
-        if (!fileName.contains("src/main/java")) {
-            return Observable.empty()
-        }
-
+    fun track(fileName: String, sql: SQL): Observable<List<TrackingResult>> = Observable.fromCallable {
         val methodASTs: Iterator<MethodDeclaration> = sql.fetchMethodHistory(fileName).rawRevisions
-                .map { MethodASTParser(it.rawBody).parse() }
+                .mapNotNull { MethodASTParser(it.rawBody).parse() }
                 .iterator()
 
-        // TODO ここに入ることは本来ないはず．どっかで原因調査
-        // 可能性: メソッドのパースに失敗してる
         if (!methodASTs.hasNext()) {
             logger.warn("Histories of $fileName was not found")
-            return Observable.empty()
+            return@fromCallable emptyList<TrackingResult>()
         }
 
         val trackingResults: MutableList<TrackingResult> = mutableListOf()
@@ -41,7 +35,7 @@ class ParameterTracker {
                 trackingResults.add(TrackingResult(fileName, detectParametersDifferencing(parentParams, childParams)))
             }
         }
-        return Observable.fromIterable(trackingResults)
+        trackingResults
     }
 
     @VisibleForTesting

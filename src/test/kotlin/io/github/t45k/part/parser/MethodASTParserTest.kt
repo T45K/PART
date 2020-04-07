@@ -13,7 +13,7 @@ internal class MethodASTParserTest {
         val location = "src/test/resources/sample/methods/CollectionsBinarySearch.mjava"
         val path = Paths.get(location)
         val contents = String(Files.readAllBytes(path))
-        val binarySearch: MethodDeclaration = MethodASTParser(contents).parse()
+        val binarySearch: MethodDeclaration? = MethodASTParser(contents).parse()
         assertEquals("""private static <T>int indexedBinarySearch(List<? extends Comparable<? super T>> list,T key){
   int low=0;
   int high=list.size() - 1;
@@ -27,7 +27,7 @@ internal class MethodASTParserTest {
   }
   return -(low + 1);
 }
-""", binarySearch.toString())
+""", binarySearch!!.toString())
     }
 
     @Test
@@ -35,10 +35,10 @@ internal class MethodASTParserTest {
         val location = "src/test/resources/sample/methods/MathMax.mjava"
         val path = Paths.get(location)
         val contents = String(Files.readAllBytes(path))
-        val mathMax: MethodDeclaration = MethodASTParser(contents).parse()
+        val mathMax: MethodDeclaration? = MethodASTParser(contents).parse()
         assertEquals("""public static int max(int a,int b){
   return a >= b ? a : b;
 }
-""", mathMax.toString())
+""", mathMax!!.toString())
     }
 }

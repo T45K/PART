@@ -3,8 +3,6 @@ package io.github.t45k.part.sql
 import io.github.t45k.part.entity.RawMethodHistory
 import io.github.t45k.part.entity.RawRevision
 import io.github.t45k.part.entity.TrackingResult
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -21,8 +19,6 @@ class SQL(dbPath: String) {
     private val revisionSelectionStatement: PreparedStatement
 
     private val resultInsertionStatement: PreparedStatement
-
-    private val logger: Logger = LoggerFactory.getLogger(SQL::class.java)
 
     init {
         val statement: Statement = connection.createStatement()
@@ -67,10 +63,6 @@ class SQL(dbPath: String) {
     fun fetchMethodHistory(fileName: String): RawMethodHistory {
         revisionSelectionStatement.setString(1, fileName)
         val revisionSelectionResults: ResultSet = revisionSelectionStatement.executeQuery()
-        if (revisionSelectionResults.isClosed) {
-            logger.warn("Query by $fileName was not found")
-            return RawMethodHistory(fileName, emptyList())
-        }
         val rawRevisions = mutableListOf<RawRevision>()
         while (revisionSelectionResults.next()) {
             rawRevisions.add(RawRevision(revisionSelectionResults.getString(Column.CONTENT), revisionSelectionResults.getString(Column.COMMIT_MESSAGE)))

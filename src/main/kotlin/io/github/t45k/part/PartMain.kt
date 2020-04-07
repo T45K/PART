@@ -5,7 +5,6 @@ import io.github.t45k.part.core.preprocess.MethodMiner
 import io.github.t45k.part.core.tracking.ParameterTracker
 import io.github.t45k.part.sql.SQL
 import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -64,13 +63,12 @@ fun main(args: Array<String>) {
             val sql = SQL(config.dbPath)
             val tracker = ParameterTracker()
             Observable.fromIterable(sql.fetchAllFileNames())
-                    .flatMap {
-                        Observable.just(it)
-                                .observeOn(Schedulers.io())
-                                .flatMap { tracker.track(it, sql) }
-                    }
-                    .blockingSubscribe { sql.insertResult(it) }
+                    .flatMap { tracker.track(it, sql) }
+                    .filter { it.isNotEmpty() }
+                    .flatMap { Observable.fromIterable(it) }
+                    .subscribe { sql.insertResult(it) }
             sql.close()
+            app.logger.info("[End]\ttracking")
         }
     }
 }
