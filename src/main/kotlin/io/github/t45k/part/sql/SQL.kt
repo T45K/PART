@@ -60,7 +60,6 @@ class SQL(dbPath: String) {
         return methods
     }
 
-    @Synchronized
     fun fetchMethodHistory(fileName: String): RawMethodHistory {
         revisionSelectionStatement.setString(1, fileName)
         val revisionSelectionResults: ResultSet = revisionSelectionStatement.executeQuery()
