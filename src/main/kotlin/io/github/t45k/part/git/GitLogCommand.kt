@@ -14,41 +14,45 @@ import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.util.io.DisabledOutputStream
 
-class GitLogCommand(repository: FileRepository) : GitCommand<String, List<Pair<ObjectId, String>>>(repository) {
+class GitLogCommand(repository: FileRepository) : GitCommand<String, List<MiningResult>>(repository) {
     private val git: Git = Git(repository)
 
-    override fun execute(input: String): List<Pair<ObjectId, String>> {
-        val followFilter: FollowFilter = FollowFilter.create(input, Config().get(DiffConfig.KEY))
+    override fun execute(fileName: String): List<MiningResult> {
+        val followFilter: FollowFilter = FollowFilter.create(fileName, Config().get(DiffConfig.KEY))
         followFilter.renameCallback = DiffCollector()
 
-        val walk = git.log().addPath(input).call() as RevWalk
+        val walk = git.log().addPath(fileName).call() as RevWalk
         walk.treeFilter = followFilter
 
         val commits: MutableList<RevCommit> = mutableListOf()
         for (revCommit in walk.iterator()) {
             commits.add(revCommit)
         }
-        return parseRevWalk(commits, input)
+        return if (commits.size >= 2) {
+            val firstObjectId: ObjectId? = getObjectIdFromFile(fileName, commits[0], commits[1]) ?: return emptyList()
+            parseRevWalk(commits, firstObjectId!!)
+        } else {
+            emptyList()
+        }
     }
 
-    private fun parseRevWalk(commits: List<RevCommit>, startPath: String): List<Pair<ObjectId, String>> {
+    private fun parseRevWalk(commits: List<RevCommit>, firstObjectId: ObjectId): List<MiningResult> {
         val diffFormatter = setUpDiffFormatter()
-        var followPath: String = startPath
-        val fileChanges: MutableList<Pair<ObjectId, String>> = mutableListOf()
-        for (i in 0 until commits.size - 1) {
-            val diff: DiffEntry = diffFormatter.scan(commits[i + 1], commits[i]).firstOrNull { it.newPath == followPath }
+        val appearedObjectIds = mutableSetOf(firstObjectId)
+        val fileChanges = mutableListOf(firstObjectId to commits[0].fullMessage)
+        for (i in 1 until commits.size) {
+            val newerCommit: RevCommit = commits[i - 1]
+            val olderCommit: RevCommit = commits[i]
+            val diff: DiffEntry = diffFormatter.scan(olderCommit, newerCommit).firstOrNull { appearedObjectIds.contains(it.newId.toObjectId()) }
                     ?: continue
 
-            if (diff.isFileChanged()) {
-                followPath = diff.oldPath
+            val candidate: ObjectId? = diff.oldId.toObjectId()
+            if (diff.isNoChange() || candidate.isEmpty()) {
+                continue
             }
 
-            fileChanges.addObjectIdIfAppropriate(diff.newId.toObjectId(), commits[i].fullMessage)
-
-            // Add initial file
-            if (i == commits.size - 2) {
-                fileChanges.addObjectIdIfAppropriate(diff.oldId.toObjectId(), commits[i + 1].fullMessage)
-            }
+            fileChanges.add(candidate!! to olderCommit.fullMessage)
+            appearedObjectIds.add(candidate)
         }
         return fileChanges
     }
@@ -62,13 +66,16 @@ class GitLogCommand(repository: FileRepository) : GitCommand<String, List<Pair<O
         return diffFormatter
     }
 
-    private fun MutableList<Pair<ObjectId, String>>.addObjectIdIfAppropriate(objectId: ObjectId, commitMessage: String) {
-        if (this.size == 0 || this.last().first != objectId) {
-            this.add(objectId to commitMessage)
-        }
-    }
+    private fun getObjectIdFromFile(fileName: String, newerCommit: RevCommit, olderCommit: RevCommit): ObjectId? =
+            setUpDiffFormatter()
+                    .scan(olderCommit, newerCommit)
+                    .firstOrNull { it.newPath == fileName }
+                    ?.newId
+                    ?.toObjectId()
 
-    private fun DiffEntry.isFileChanged(): Boolean = this.changeType == DiffEntry.ChangeType.RENAME || this.changeType == DiffEntry.ChangeType.COPY
+    private fun DiffEntry.isNoChange(): Boolean = this.newId.toObjectId() == this.oldId.toObjectId()
+
+    private fun ObjectId?.isEmpty(): Boolean = this == null || this == ObjectId.zeroId()
 
     private class DiffCollector : RenameCallback() {
         var diffs: MutableList<DiffEntry> = mutableListOf()
@@ -77,3 +84,7 @@ class GitLogCommand(repository: FileRepository) : GitCommand<String, List<Pair<O
         }
     }
 }
+
+data class MiningResult(val objectId: ObjectId, val commitMessage: String)
+
+infix fun ObjectId.to(commitMessage: String): MiningResult = MiningResult(this, commitMessage)
